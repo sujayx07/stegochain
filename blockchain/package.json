@@ -1,0 +1,16 @@
+{
+  "name": "stegochain-blockchain",
+  "version": "1.0.0",
+  "description": "StegoChain smart contract — Hardhat project",
+  "scripts": {
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:ganache": "hardhat run scripts/deploy.js --network ganache",
+    "deploy:local": "hardhat run scripts/deploy.js --network localhost"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "dotenv": "^16.6.1",
+    "hardhat": "^2.28.6"
+  }
+}

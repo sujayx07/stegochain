@@ -1,0 +1,72 @@
+# Environment / Secrets
+.env
+.env.production
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.example
+!venv
+!ENV
+
+# Node / Frontend / Blockchain
+node_modules/
+/frontend/node_modules/
+/blockchain/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Next.js Build Output
+.next/
+/frontend/.next/
+out/
+/frontend/out/
+
+# Hardhat / Blockchain Compile & Cache Outputs
+artifacts/
+/blockchain/artifacts/
+cache/
+/blockchain/cache/
+typechain/
+/blockchain/typechain/
+typechain-types/
+/blockchain/typechain-types/
+coverage/
+/blockchain/coverage/
+coverage.json
+/blockchain/coverage.json
+.openzeppelin/
+/blockchain/.openzeppelin/
+
+# Python / Flask Backend
+__pycache__/
+/backend/__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+/backend/.pytest_cache/
+/tests/.pytest_cache/
+.venv/
+venv/
+ENV/
+env/
+dist/
+build/
+*.egg-info/
+/backend/dist/
+/backend/build/
+/backend/*.egg-info/
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.log

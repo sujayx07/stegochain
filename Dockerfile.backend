@@ -1,0 +1,32 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# System deps for Pillow, scipy, numpy, web3
+RUN apt-get update && apt-get install -y \
+    gcc \
+    g++ \
+    libffi-dev \
+    libssl-dev \
+    && rm -rf /var/lib/apt/lists/*
+
+# Layer-cache Python deps separately
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+
+# Copy application source
+COPY backend/ ./backend/
+COPY blockchain/artifacts/ ./blockchain/artifacts/
+
+# Temp dir for stegochain file operations
+RUN mkdir -p /tmp/stegochain
+
+WORKDIR /app/backend
+
+EXPOSE 5000
+
+HEALTHCHECK --interval=10s --timeout=5s --retries=5 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"
+
+CMD ["python", "app.py"]
