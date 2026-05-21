@@ -1,12 +1,13 @@
 {
   "name": "stegochain-blockchain",
-  "version": "1.0.0",
-  "description": "StegoChain smart contract — Hardhat project",
+  "version": "2.0.0",
+  "description": "StegoChainV2 smart contract — Hardhat project with Ethereum Sepolia support",
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
-    "deploy:ganache": "hardhat run scripts/deploy.js --network ganache",
-    "deploy:local": "hardhat run scripts/deploy.js --network localhost"
+    "deploy:local": "hardhat run scripts/deployV2.js --network localhost",
+    "deploy:sepolia": "hardhat run scripts/deployV2.js --network sepolia",
+    "verify:sepolia": "hardhat verify --network sepolia"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox": "^4.0.0",

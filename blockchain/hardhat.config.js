@@ -1,38 +1,28 @@
 require("@nomicfoundation/hardhat-toolbox");
-require("dotenv").config({ path: "../.env" });
+// Load .env.production first (production keys), fall back to .env for local dev
+require("dotenv").config({ path: "../.env.production", override: true });
+require("dotenv").config({ path: "../.env", override: false });
 
-/** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: {
     version: "0.8.19",
-    settings: {
-      optimizer: {
-        enabled: true,
-        runs: 200,
-      },
-    },
+    settings: { optimizer: { enabled: true, runs: 200 } },
   },
   networks: {
-    // Hardhat node started with: npx hardhat node --port 7545
-    // chainId is 31337 (Hardhat default) on port 7545
-    dev: {
-      url: "http://127.0.0.1:7545",
-      chainId: 31337,
-    },
-    ganache: {
-      url: process.env.GANACHE_URL || "http://127.0.0.1:7545",
-      accounts: process.env.PRIVATE_KEY ? [`0x${process.env.PRIVATE_KEY.replace(/^0x/, "")}`] : [],
-      chainId: 1337,
+    // Ethereum Sepolia (migrated from Base Sepolia)
+    sepolia: {
+      url: process.env.BASE_SEPOLIA_RPC_URL || "",
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : [],
+      chainId: 11155111,
     },
     localhost: {
       url: "http://127.0.0.1:8545",
       chainId: 31337,
     },
   },
-  paths: {
-    sources:   "./contracts",
-    tests:     "./test",
-    cache:     "./cache",
-    artifacts: "./artifacts",
+  // Etherscan v2 API — single key format
+  etherscan: {
+    apiKey: process.env.BASESCAN_API_KEY || "",
   },
+  sourcify: { enabled: false },
 };

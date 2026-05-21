@@ -1,18 +1,14 @@
 """
-Transaction Model
-==================
+Transaction Model V2
+=====================
 MongoDB collection: transactions
-One Transaction represents one complete send operation:
-    stego embed → AES encrypt → IPFS upload → blockchain register
+Replaces Shamir fields with fragment_cids, media_hash, merkle_root (on-chain system).
 """
-
 import uuid
 from datetime import datetime, timezone
 
 
 class Transaction:
-    """MongoDB-ready Transaction document model."""
-
     COLLECTION = "transactions"
 
     def __init__(
@@ -23,23 +19,23 @@ class Transaction:
         receiver_eth: str,
         file_type: str,
         original_filename: str,
-        # Set after IPFS upload
+        # IPFS
         ipfs_cid: str = "",
         ipfs_gateway_url: str = "",
-        # Set after AES encryption
+        # AES
         nonce: str = "",
         tag: str = "",
-        # Set after blockchain registration
+        # V2 fragment system
+        fragment_cids: list = None,
+        total_fragments: int = 0,
+        media_hash: str = "",
         merkle_root: str = "",
+        # Blockchain
         blockchain_record_id: int = -1,
         tx_hash: str = "",
         block_number: int = -1,
-        # Shamir params
-        k: int = 3,
-        n: int = 5,
         # Lifecycle
         status: str = "pending",
-        # Auto-filled
         session_id: str = None,
         created_at: str = None,
         completed_at: str = None,
@@ -55,20 +51,18 @@ class Transaction:
         self.ipfs_gateway_url     = ipfs_gateway_url
         self.nonce                = nonce
         self.tag                  = tag
+        self.fragment_cids        = fragment_cids or []
+        self.total_fragments      = total_fragments
+        self.media_hash           = media_hash
         self.merkle_root          = merkle_root
         self.blockchain_record_id = blockchain_record_id
         self.tx_hash              = tx_hash
         self.block_number         = block_number
-        self.k                    = k
-        self.n                    = n
         self.status               = status
         self.created_at           = created_at or datetime.now(timezone.utc).isoformat()
         self.completed_at         = completed_at
 
-    # ── Serialisation ─────────────────────────────────────────────────────
-
     def to_dict(self) -> dict:
-        """Return a MongoDB-ready dictionary with all fields."""
         return {
             "session_id":           self.session_id,
             "sender_id":            self.sender_id,
@@ -81,12 +75,13 @@ class Transaction:
             "ipfs_gateway_url":     self.ipfs_gateway_url,
             "nonce":                self.nonce,
             "tag":                  self.tag,
+            "fragment_cids":        self.fragment_cids,
+            "total_fragments":      self.total_fragments,
+            "media_hash":           self.media_hash,
             "merkle_root":          self.merkle_root,
             "blockchain_record_id": self.blockchain_record_id,
             "tx_hash":              self.tx_hash,
             "block_number":         self.block_number,
-            "k":                    self.k,
-            "n":                    self.n,
             "status":               self.status,
             "created_at":           self.created_at,
             "completed_at":         self.completed_at,
@@ -94,7 +89,6 @@ class Transaction:
 
     @classmethod
     def from_dict(cls, data: dict) -> "Transaction":
-        """Reconstruct a Transaction from a MongoDB document."""
         return cls(
             sender_id            = data["sender_id"],
             receiver_id          = data["receiver_id"],
@@ -106,12 +100,13 @@ class Transaction:
             ipfs_gateway_url     = data.get("ipfs_gateway_url", ""),
             nonce                = data.get("nonce", ""),
             tag                  = data.get("tag", ""),
+            fragment_cids        = data.get("fragment_cids", []),
+            total_fragments      = data.get("total_fragments", 0),
+            media_hash           = data.get("media_hash", ""),
             merkle_root          = data.get("merkle_root", ""),
             blockchain_record_id = data.get("blockchain_record_id", -1),
             tx_hash              = data.get("tx_hash", ""),
             block_number         = data.get("block_number", -1),
-            k                    = data.get("k", 3),
-            n                    = data.get("n", 5),
             status               = data.get("status", "pending"),
             session_id           = data.get("session_id"),
             created_at           = data.get("created_at"),
@@ -119,10 +114,6 @@ class Transaction:
         )
 
     def to_summary(self) -> dict:
-        """
-        Return the API-safe summary subset.
-        Excludes nonce, tag, and other sensitive/internal fields.
-        """
         return {
             "session_id":           self.session_id,
             "sender_id":            self.sender_id,
@@ -130,7 +121,10 @@ class Transaction:
             "file_type":            self.file_type,
             "ipfs_cid":             self.ipfs_cid,
             "ipfs_gateway_url":     self.ipfs_gateway_url,
+            "fragment_cids":        self.fragment_cids,
+            "total_fragments":      self.total_fragments,
             "merkle_root":          self.merkle_root,
+            "media_hash":           self.media_hash,
             "blockchain_record_id": self.blockchain_record_id,
             "tx_hash":              self.tx_hash,
             "status":               self.status,
@@ -140,5 +134,5 @@ class Transaction:
     def __repr__(self) -> str:
         return (
             f"Transaction(session={self.session_id[:8]}, "
-            f"status={self.status!r}, cid={self.ipfs_cid[:16]}...)"
+            f"status={self.status!r}, cid={self.ipfs_cid[:16] if self.ipfs_cid else ''}...)"
         )

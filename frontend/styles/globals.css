@@ -3,10 +3,81 @@
 @tailwind components;
 @tailwind utilities;
 
+* { box-sizing: border-box; }
+
 body {
-  background-color: #0a0a0f;
-  color: #e2e8f0;
+  background-color: #F8F7F5;
+  color: #1C1917;
   font-family: 'Inter', sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
 .mono { font-family: 'JetBrains Mono', monospace; }
+
+.shimmer-bg {
+  background: linear-gradient(90deg, #f0ede9 25%, #e8e4df 50%, #f0ede9 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #E7E5E4;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.btn-primary {
+  background: #F97316;
+  color: white;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 500;
+  font-size: 14px;
+  transition: all 0.15s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover { background: #EA6C0A; box-shadow: 0 4px 14px rgba(249,115,22,0.25); transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { background: #D4C4BB; cursor: not-allowed; transform: none; box-shadow: none; }
+
+.btn-secondary {
+  background: white;
+  color: #1C1917;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-weight: 500;
+  font-size: 14px;
+  border: 1px solid #E7E5E4;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-secondary:hover { border-color: #F97316; color: #F97316; }
+
+.input-field {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid #E7E5E4;
+  border-radius: 10px;
+  font-size: 14px;
+  color: #1C1917;
+  background: white;
+  transition: border-color 0.15s ease;
+  outline: none;
+}
+
+.input-field:focus { border-color: #F97316; box-shadow: 0 0 0 3px rgba(249,115,22,0.1); }
+.input-field::placeholder { color: #A8A29E; }
+
+.badge-success { background: #DCFCE7; color: #16A34A; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.badge-danger { background: #FEE2E2; color: #DC2626; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.badge-warning { background: #FEF3C7; color: #D97706; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+.badge-orange { background: #FFF0E6; color: #F97316; padding: 3px 10px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+
+@keyframes shimmer {
+  from { background-position: -200% 0; }
+  to { background-position: 200% 0; }
+}

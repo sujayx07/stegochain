@@ -41,6 +41,10 @@ def generate_ecc_keypair() -> dict:
     return {
         "private_key": key.export_key(format="PEM"),
         "public_key":  key.public_key().export_key(format="PEM"),
+        "private_key_pem": key.export_key(format="PEM"),
+        "public_key_pem":  key.public_key().export_key(format="PEM"),
+        "public_key_x": hex(int(key.pointQ.x))[2:],
+        "public_key_y": hex(int(key.pointQ.y))[2:],
     }
 
 

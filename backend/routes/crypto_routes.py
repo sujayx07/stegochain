@@ -23,6 +23,8 @@ def generate_keypair():
     try:
         kp = generate_ecc_keypair()
         return _ok({"public_key": kp["public_key"], "private_key": kp["private_key"],
+                     "public_key_pem": kp["public_key_pem"], "private_key_pem": kp["private_key_pem"],
+                     "public_key_x": kp["public_key_x"], "public_key_y": kp["public_key_y"],
                      "warning": "Store private key securely. Never send it over the network."})
     except Exception as e:
         return _err(f"Keypair generation failed: {e}")

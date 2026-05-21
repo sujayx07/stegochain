@@ -1,225 +1,419 @@
-// frontend/pages/send.js
-import Head from "next/head";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { motion, AnimatePresence } from "framer-motion";
+import toast from "react-hot-toast";
+import { ethers } from "ethers";
 import Navbar from "../components/Navbar";
-import MessageForm from "../components/MessageForm";
-import UploadMedia from "../components/UploadMedia";
-import { sendMessage } from "../utils/api";
+import StepIndicator from "../components/StepIndicator";
+import DropZone from "../components/DropZone";
+import PipelineProgress from "../components/PipelineProgress";
+import HashDisplay from "../components/HashDisplay";
+import SecurityBadge from "../components/SecurityBadge";
+import { useAuth } from "../context/AuthContext";
+import { useWallet } from "../context/WalletContext";
+import { getUserByEth, sendMessage, finalizeSend } from "../utils/api";
 
-const STEPS = ["Upload", "Compose", "Review", "Send"];
+const STEPS = ["Upload File", "Compose", "Review", "Sending"];
 
-const PIPELINE_STEPS = [
-  "Embedding message...",
-  "Encrypting...",
-  "Uploading to IPFS...",
-  "Registering on blockchain...",
-  "Splitting keys...",
+const PIPELINE_LABELS = [
+  "Embedding", "Encrypting", "Uploading to IPFS",
+  "Splitting Key", "Fragment Upload", "Merkle Tree",
+  "Blockchain Reg", "Complete"
 ];
 
-function CopyButton({ text }) {
-  const [copied, setCopied] = useState(false);
-  function copy() {
-    navigator.clipboard?.writeText(text);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1500);
-  }
-  return (
-    <button onClick={copy} style={{ fontSize: "11px", padding: "2px 8px", borderRadius: "4px", backgroundColor: "rgba(99,102,241,0.12)", color: "#6366f1", border: "1px solid rgba(99,102,241,0.3)", cursor: "pointer" }}>
-      {copied ? "Copied!" : "Copy"}
-    </button>
-  );
+function mkPipeline(activeIdx) {
+  return PIPELINE_LABELS.map((label, i) => ({
+    label,
+    status: i < activeIdx ? "complete" : i === activeIdx ? "loading" : "pending"
+  }));
 }
 
-export default function SendPage() {
-  const [step,       setStep]       = useState(0);
-  const [file,       setFile]       = useState(null);
-  const [formValues, setFormValues] = useState(null);
-  const [loading,    setLoading]    = useState(false);
-  const [pipeStep,   setPipeStep]   = useState(0);
-  const [result,     setResult]     = useState(null);
-  const [error,      setError]      = useState("");
+const CONTRACT_ABI = [
+  {
+    "inputs": [
+      { "name": "ipfsCID",        "type": "string" },
+      { "name": "fragmentCIDs",   "type": "string[]" },
+      { "name": "receiver",       "type": "address" },
+      { "name": "sessionId",      "type": "string" },
+      { "name": "merkleRoot",     "type": "bytes32" },
+      { "name": "mediaHash",      "type": "bytes32" },
+      { "name": "totalFragments", "type": "uint8" }
+    ],
+    "name": "registerRecord",
+    "outputs": [
+      { "name": "", "type": "uint256" }
+    ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+];
 
-  function handleFileSelected(f) { setFile(f); }
-  function handleCompose(vals)   { setFormValues(vals); }
+export default function Send() {
+  const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
+  const { address, signer, connect, switchToSepolia, isCorrectChain, isConnected } = useWallet();
+  const [step, setStep] = useState(0);
+  const [completed, setCompleted] = useState([]);
+  const [file, setFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [message, setMessage] = useState("");
+  const [receiver, setReceiver] = useState("");
+  const [receiverInfo, setReceiverInfo] = useState(null);
+  const [fragments, setFragments] = useState(4);
+  const [pipeline, setPipeline] = useState(PIPELINE_LABELS.map(l => ({ label: l, status: "pending" })));
+  const [result, setResult] = useState(null);
+  const [sendError, setSendError] = useState(null);
+
+  useEffect(() => { if (!loading && !isAuthenticated) router.push("/login"); }, [loading, isAuthenticated]);
+
+  useEffect(() => {
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [file]);
+
+  useEffect(() => {
+    if (!receiver || receiver.length < 10) { setReceiverInfo(null); return; }
+    const t = setTimeout(async () => {
+      try {
+        const data = await getUserByEth(receiver);
+        setReceiverInfo({ found: true, username: data.username || data.user?.username });
+      } catch {
+        setReceiverInfo({ found: false });
+      }
+    }, 600);
+    return () => clearTimeout(t);
+  }, [receiver]);
+
+  function goNext() {
+    setCompleted(c => [...c, step]);
+    setStep(s => s + 1);
+  }
 
   async function handleSend() {
-    setLoading(true); setError(""); setPipeStep(0);
-    // Animate pipeline steps
-    const interval = setInterval(() => setPipeStep(p => Math.min(p + 1, PIPELINE_STEPS.length - 1)), 1200);
+    if (!isConnected) {
+      toast.error("Please connect your wallet first.");
+      return;
+    }
+    if (!isCorrectChain) {
+      toast.error("Please switch to Ethereum Sepolia network.");
+      return;
+    }
+
+    goNext(); // go to step 3 (sending)
+    setSendError(null);
+    setResult(null);
+
+    // Initial pipeline state (all pending)
+    setPipeline(PIPELINE_LABELS.map(l => ({ label: l, status: "pending" })));
+
+    const fd = new FormData();
+    fd.append("file", file);                                           // backend: request.files["file"]
+    fd.append("message", message);
+    fd.append("receiver_eth", receiver);                               // backend: receiver_eth
+    fd.append("n_fragments", String(fragments));                       // backend: n_fragments
+    fd.append("file_type", file.type.startsWith("audio/") ? "audio" : "image"); // backend: file_type
+
+    // Start simulation of first 6 steps (indices 0 to 5)
+    let simIdx = 0;
+    const interval = setInterval(() => {
+      if (simIdx < 5) {
+        setPipeline(prev => prev.map((p, j) => {
+          if (j < simIdx) return { ...p, status: "complete" };
+          if (j === simIdx) return { ...p, status: "loading" };
+          return p;
+        }));
+        simIdx++;
+      }
+    }, 700);
+
     try {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("message",               formValues.message);
-      fd.append("file_type",             file.type.startsWith("audio") ? "audio" : "image");
-      fd.append("k",                     String(formValues.k));
-      fd.append("n",                     String(formValues.n));
-      fd.append("receiver_eth_address",  formValues.receiver_eth_address || "");
-      fd.append("sender_id",             "web_user");
-      fd.append("receiver_id",           "web_receiver");
-      const n = formValues.n;
-      const owners = Array.from({ length: n }, (_, i) => `owner_${i + 1}`);
-      fd.append("owner_ids", owners.join(","));
+      // 1. Call backend prepare send
       const res = await sendMessage(fd);
-      setResult(res);
-      setStep(4); // success
-    } catch (err) {
-      setError(err.message || "Send pipeline failed");
-    } finally {
       clearInterval(interval);
-      setLoading(false);
+
+      // Backend send prep completed. Set steps 0-5 to complete.
+      setPipeline(prev => prev.map((p, j) => {
+        if (j < 6) return { ...p, status: "complete" };
+        if (j === 6) return { ...p, status: "loading" }; // Blockchain Reg
+        return p;
+      }));
+
+      // 2. Call contract.registerRecord via MetaMask
+      toast("MetaMask: Confirm on-chain record registration", { icon: "🦊" });
+      
+      const contractAddress = res.contract_address || process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
+      if (!contractAddress) {
+        throw new Error("Smart contract address not found in response or config.");
+      }
+
+      const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
+
+      const tx = await contract.registerRecord(
+        res.ipfs_cid,
+        res.fragment_cids,
+        ethers.getAddress(res.receiver_eth),
+        res.session_id,
+        res.merkle_root,
+        res.media_hash,
+        res.total_fragments
+      );
+
+      // Update pipeline status or keep loading while tx is being mined
+      toast.success("Transaction submitted! Waiting for confirmation...");
+      const receipt = await tx.wait();
+
+      if (receipt.status !== 1) {
+        throw new Error("Transaction reverted on-chain.");
+      }
+
+      // Mark Blockchain Reg as complete and Finalizing status
+      setPipeline(prev => prev.map((p, j) => {
+        if (j <= 6) return { ...p, status: "complete" };
+        if (j === 7) return { ...p, status: "loading" }; // Complete / Finalizing
+        return p;
+      }));
+
+      // 3. Finalize send on backend
+      const finalRes = await finalizeSend({
+        session_id: res.session_id,
+        tx_hash: receipt.hash
+      });
+
+      // Done!
+      setPipeline(prev => prev.map(p => ({ ...p, status: "complete" })));
+      setResult(finalRes);
+      toast.success("Message sent and finalized successfully!");
+
+    } catch (err) {
+      clearInterval(interval);
+      console.error(err);
+      
+      // Determine which step failed
+      setPipeline(prev => {
+        const loadingIdx = prev.findIndex(p => p.status === "loading");
+        const errIdx = loadingIdx !== -1 ? loadingIdx : 0;
+        return prev.map((p, j) => j === errIdx ? { ...p, status: "error" } : p);
+      });
+      setSendError(err.message || "An error occurred during sending.");
+      toast.error("Sending failed: " + (err.message || "Error"));
     }
   }
 
+  const isImage = file && file.type.startsWith("image/");
+  const isAudio = file && file.type.startsWith("audio/");
+  const MAX_CHARS = isImage ? 500 : 200;
+
+  if (loading) return null;
+
   return (
     <>
-      <Head>
-        <title>Send Message — StegoChain</title>
-        <meta name="description" content="Securely embed and send a hidden message using steganography and blockchain." />
-      </Head>
-      <div style={{ minHeight: "100vh", backgroundColor: "#0a0a0f" }}>
-        <Navbar />
-        <main className="max-w-2xl mx-auto px-6 py-12">
-          <h1 className="text-3xl font-bold mb-2" style={{ color: "#e2e8f0" }}>Send Hidden Message</h1>
-          <p className="mb-8" style={{ color: "#94a3b8" }}>Four steps to embed, encrypt, and anchor your message on-chain.</p>
+      <Navbar/>
+      <main style={{ maxWidth: 700, margin: "0 auto", padding: "32px 24px" }}>
+        <motion.h1 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+          style={{ fontSize: 24, fontWeight: 700, color: "#1C1917", marginBottom: 8 }}>
+          Send a Message
+        </motion.h1>
+        <p style={{ fontSize: 14, color: "#78716C", marginBottom: 24 }}>
+          Hide your encrypted message inside a media file and anchor it on the blockchain.
+        </p>
 
-          {/* Step indicator */}
-          {step < 4 && (
-            <div className="flex items-center mb-10">
-              {STEPS.map((label, i) => (
-                <div key={label} className="flex items-center flex-1 last:flex-none">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
-                      style={{ backgroundColor: i <= step ? "#6366f1" : "#1e1e2e", color: i <= step ? "#fff" : "#94a3b8" }}
-                    >
-                      {i < step ? "✓" : i + 1}
-                    </div>
-                    <span className="text-xs mt-1" style={{ color: i === step ? "#6366f1" : "#94a3b8" }}>{label}</span>
-                  </div>
-                  {i < STEPS.length - 1 && (
-                    <div className="flex-1 h-px mx-2 mt-px" style={{ backgroundColor: i < step ? "#6366f1" : "#1e1e2e" }} />
-                  )}
-                </div>
-              ))}
-            </div>
+        <StepIndicator steps={STEPS} currentStep={step} completedSteps={completed}/>
+
+        <div className="card" style={{ padding: 28, marginTop: 8 }}>
+
+          {/* Step 0 — Upload */}
+          {step === 0 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "#1C1917", marginBottom: 16 }}>Upload Cover File</h2>
+              <DropZone
+                onFileSelected={setFile}
+                accept={{ "image/png": [], "image/bmp": [], "audio/wav": [] }}
+                label="Drop PNG, BMP, or WAV file here"
+                hint="Max 10MB · Images hide ~500 chars · WAV hides ~200 chars"
+              />
+              {preview && isImage && (
+                <img src={preview} alt="preview" style={{ marginTop: 16, maxHeight: 200, borderRadius: 12, border: "1px solid #E7E5E4", display: "block" }}/>
+              )}
+              {preview && isAudio && (
+                <audio controls src={preview} style={{ marginTop: 16, width: "100%" }}/>
+              )}
+              <button className="btn-primary" style={{ width: "100%", marginTop: 20 }} disabled={!file} onClick={goNext}>
+                Next: Compose Message →
+              </button>
+            </motion.div>
           )}
 
-          <div style={{ backgroundColor: "#13131a", border: "1px solid #1e1e2e", borderRadius: "12px", padding: "28px 24px" }}>
-
-            {/* Step 0 — Upload */}
-            {step === 0 && (
-              <div>
-                <h2 className="text-lg font-semibold mb-4" style={{ color: "#e2e8f0" }}>Step 1 — Upload Cover File</h2>
-                <UploadMedia
-                  onFileSelected={handleFileSelected}
-                  accept="image/png,image/bmp,.wav,audio/wav"
-                  label="Select an image (PNG/BMP) or audio (WAV) file"
+          {/* Step 1 — Compose */}
+          {step === 1 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "#1C1917", marginBottom: 16 }}>Compose Message</h2>
+              <div style={{ marginBottom: 16 }}>
+                <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                  <label style={{ fontSize: 13, fontWeight: 500, color: "#1C1917" }}>Secret Message</label>
+                  <span style={{ fontSize: 12, color: message.length > MAX_CHARS ? "#DC2626" : "#78716C" }}>
+                    {message.length} / {MAX_CHARS}
+                  </span>
+                </div>
+                <textarea
+                  className="input-field"
+                  rows={5}
+                  placeholder="Enter your secret message…"
+                  value={message}
+                  onChange={e => setMessage(e.target.value)}
+                  style={{ resize: "vertical" }}
                 />
-                <button
-                  disabled={!file}
-                  onClick={() => setStep(1)}
-                  className="mt-6 px-6 py-2.5 rounded-lg font-semibold"
-                  style={{ backgroundColor: file ? "#6366f1" : "#1e1e2e", color: file ? "#fff" : "#94a3b8", border: "none", cursor: file ? "pointer" : "not-allowed" }}
-                >
-                  Next: Compose Message →
-                </button>
-              </div>
-            )}
-
-            {/* Step 1 — Compose */}
-            {step === 1 && (
-              <div>
-                <h2 className="text-lg font-semibold mb-4" style={{ color: "#e2e8f0" }}>Step 2 — Compose Message</h2>
-                <MessageForm
-                  onSubmit={vals => { handleCompose(vals); setStep(2); }}
-                  loading={false}
-                  buttonLabel="Next: Review →"
-                />
-              </div>
-            )}
-
-            {/* Step 2 — Review */}
-            {step === 2 && formValues && (
-              <div>
-                <h2 className="text-lg font-semibold mb-6" style={{ color: "#e2e8f0" }}>Step 3 — Review</h2>
-                <dl className="flex flex-col gap-3 text-sm">
-                  {[
-                    ["File",       `${file?.name} (${file?.type})`],
-                    ["Message",    `${formValues.message.length} characters`],
-                    ["k-of-n",     `${formValues.k} of ${formValues.n} shares`],
-                    ["Receiver",   formValues.receiver_eth_address || "Not specified"],
-                  ].map(([label, value]) => (
-                    <div key={label} className="flex justify-between py-2" style={{ borderBottom: "1px solid #1e1e2e" }}>
-                      <dt style={{ color: "#94a3b8" }}>{label}</dt>
-                      <dd className="mono" style={{ color: "#e2e8f0" }}>{value}</dd>
-                    </div>
-                  ))}
-                </dl>
-                <div className="flex gap-3 mt-6">
-                  <button onClick={() => setStep(1)} style={{ flex: 1, padding: "10px", backgroundColor: "#13131a", color: "#94a3b8", border: "1px solid #1e1e2e", borderRadius: "8px", cursor: "pointer" }}>← Back</button>
-                  <button onClick={() => { setStep(3); handleSend(); }} style={{ flex: 2, padding: "10px", backgroundColor: "#6366f1", color: "#fff", border: "none", borderRadius: "8px", cursor: "pointer", fontWeight: "600" }}>
-                    🚀 Send Message
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {/* Step 3 — Loading */}
-            {step === 3 && loading && (
-              <div className="py-4">
-                <h2 className="text-lg font-semibold mb-6" style={{ color: "#e2e8f0" }}>Step 4 — Processing Pipeline...</h2>
-                <div className="flex flex-col gap-3">
-                  {PIPELINE_STEPS.map((label, i) => (
-                    <div key={label} className="flex items-center gap-3 text-sm">
-                      <span style={{ width: "20px", color: i <= pipeStep ? "#22c55e" : "#94a3b8" }}>
-                        {i < pipeStep ? "✅" : i === pipeStep ? "⏳" : "○"}
-                      </span>
-                      <span style={{ color: i <= pipeStep ? "#e2e8f0" : "#94a3b8" }}>{label}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Step 4 — Success */}
-            {step === 4 && result && (
-              <div>
-                <div className="mb-6 px-4 py-3 rounded-lg" style={{ backgroundColor: "rgba(34,197,94,0.08)", border: "1px solid rgba(34,197,94,0.3)" }}>
-                  <p className="font-semibold" style={{ color: "#22c55e" }}>✅ Message Sent Successfully</p>
-                  <p className="text-sm mt-1" style={{ color: "#94a3b8" }}>Share the Session ID with your receiver to allow decryption.</p>
-                </div>
-                {[
-                  ["Session ID",          result.session_id,            true],
-                  ["IPFS CID",            result.ipfs_cid,              true],
-                  ["Transaction Hash",    result.tx_hash,               true],
-                  ["Blockchain Record",   `#${result.blockchain_record_id}`, false],
-                ].map(([label, value, copy]) => (
-                  <div key={label} className="flex justify-between items-center py-3" style={{ borderBottom: "1px solid #1e1e2e" }}>
-                    <span className="text-sm" style={{ color: "#94a3b8" }}>{label}</span>
-                    <div className="flex items-center gap-2">
-                      <span className="mono text-sm" style={{ color: "#e2e8f0" }}>{String(value).slice(0, 24)}{String(value).length > 24 ? "..." : ""}</span>
-                      {copy && <CopyButton text={String(value)} />}
-                    </div>
-                  </div>
-                ))}
-                {result.ipfs_gateway_url && (
-                  <a href={result.ipfs_gateway_url} target="_blank" rel="noreferrer" className="block mt-4 text-sm text-center" style={{ color: "#6366f1" }}>
-                    🌐 View on IPFS Gateway →
-                  </a>
+                {message.length > MAX_CHARS && (
+                  <div style={{ fontSize: 12, color: "#D97706", marginTop: 4 }}>⚠ Message may exceed cover file capacity</div>
                 )}
               </div>
-            )}
 
-            {/* Error */}
-            {error && (
-              <div className="mt-4 px-4 py-3 rounded-lg" style={{ backgroundColor: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.3)", color: "#ef4444", fontSize: "14px" }}>
-                <p className="font-semibold mb-1">❌ Pipeline Failed</p>
-                <p>{error}</p>
+              <div style={{ marginBottom: 16 }}>
+                <label style={{ fontSize: 13, fontWeight: 500, color: "#1C1917", display: "block", marginBottom: 6 }}>Receiver Ethereum Address</label>
+                <input
+                  className="input-field mono"
+                  placeholder="0x..."
+                  value={receiver}
+                  onChange={e => setReceiver(e.target.value)}
+                />
+                {receiverInfo && (
+                  <div style={{ marginTop: 6, display: "flex", alignItems: "center", gap: 6 }}>
+                    {receiverInfo.found ? (
+                      <span className="badge-success">✓ {receiverInfo.username}</span>
+                    ) : (
+                      <span className="badge-danger">User not registered</span>
+                    )}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        </main>
-      </div>
+
+              <div style={{ marginBottom: 20 }}>
+                <label style={{ fontSize: 13, fontWeight: 500, color: "#1C1917", display: "block", marginBottom: 6 }}>
+                  Key Fragments
+                  <span style={{ fontSize: 11, color: "#78716C", marginLeft: 6 }}>More = higher security</span>
+                </label>
+                <div style={{ display: "flex", gap: 8 }}>
+                  {[4, 6, 8].map(n => (
+                    <button key={n} onClick={() => setFragments(n)} style={{
+                      padding: "8px 20px", borderRadius: 8, border: "1px solid",
+                      borderColor: fragments === n ? "#F97316" : "#E7E5E4",
+                      background: fragments === n ? "#FFF0E6" : "white",
+                      color: fragments === n ? "#F97316" : "#78716C",
+                      fontWeight: fragments === n ? 600 : 400,
+                      cursor: "pointer", fontSize: 14
+                    }}>
+                      {n}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 10 }}>
+                <button className="btn-secondary" onClick={() => setStep(0)}>← Back</button>
+                <button className="btn-primary" style={{ flex: 1 }} disabled={!message || !receiver || !receiverInfo?.found} onClick={goNext}>
+                  Review →
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 2 — Review */}
+          {step === 2 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              <h2 style={{ fontSize: 16, fontWeight: 600, color: "#1C1917", marginBottom: 20 }}>Review & Confirm</h2>
+              <div style={{ display: "flex", flexDirection: "column", gap: 12, marginBottom: 24 }}>
+                {[
+                  ["File", `${file?.name} · ${(file?.size/1024).toFixed(1)} KB`],
+                  ["Type", file?.type],
+                  ["Message Length", `${message.length} characters`],
+                  ["Receiver", receiverInfo?.username],
+                  ["Fragments", `${fragments} key fragments`],
+                ].map(([k, v]) => (
+                  <div key={k} style={{ display: "flex", justifyContent: "space-between", padding: "10px 0", borderBottom: "1px solid #F5F4F3" }}>
+                    <span style={{ fontSize: 13, color: "#78716C" }}>{k}</span>
+                    <span style={{ fontSize: 13, fontWeight: 500, color: "#1C1917" }}>{v}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginBottom: 20 }}>
+                <SecurityBadge layers={["steganography", "aes256", "blockchain", "ipfs", "merkle"]}/>
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button className="btn-secondary" onClick={() => setStep(1)}>← Back</button>
+                {!isConnected ? (
+                  <button className="btn-primary" style={{ flex: 1 }} onClick={connect}>
+                    🦊 Connect Wallet
+                  </button>
+                ) : !isCorrectChain ? (
+                  <button className="btn-primary" style={{ flex: 1 }} onClick={switchToSepolia}>
+                    🦊 Switch to Sepolia
+                  </button>
+                ) : (
+                  <button className="btn-primary" style={{ flex: 1 }} onClick={handleSend}>
+                    🚀 Send Now
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Step 3 — Sending */}
+          {step === 3 && (
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+              {!result && !sendError && (
+                <>
+                  <h2 style={{ fontSize: 16, fontWeight: 600, color: "#1C1917", marginBottom: 8, textAlign: "center" }}>Processing…</h2>
+                  <PipelineProgress steps={pipeline}/>
+                </>
+              )}
+
+              {sendError && (
+                <div style={{ textAlign: "center", padding: "20px 0" }}>
+                  <div style={{ fontSize: 36, marginBottom: 12 }}>❌</div>
+                  <div style={{ fontWeight: 600, color: "#DC2626", marginBottom: 8 }}>Send Failed</div>
+                  <div style={{ fontSize: 14, color: "#78716C", marginBottom: 16 }}>{sendError}</div>
+                  <button className="btn-primary" onClick={() => { setStep(2); setPipeline(PIPELINE_LABELS.map(l=>({label:l,status:"pending"}))); setSendError(null); }}>
+                    Retry
+                  </button>
+                </div>
+              )}
+
+              {result && (
+                <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}>
+                  <div style={{ textAlign: "center", marginBottom: 20 }}>
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                      style={{ fontSize: 48 }}>✅</motion.div>
+                    <div style={{ fontWeight: 700, fontSize: 18, color: "#16A34A", marginTop: 8 }}>Message Sent Successfully!</div>
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 20 }}>
+                    <div style={{ padding: 16, background: "#FFF0E6", border: "1px solid #FED7AA", borderRadius: 12 }}>
+                      <div style={{ fontSize: 12, color: "#78716C", marginBottom: 4 }}>Session ID — Share this with the receiver</div>
+                      <HashDisplay value={result.session_id} type="sessionid" showLink={false}/>
+                    </div>
+                    {result.ipfs_cid && <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 12, color: "#78716C", minWidth: 80 }}>IPFS CID</span>
+                      <HashDisplay value={result.ipfs_cid} type="cid"/>
+                    </div>}
+                    {result.tx_hash && <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span style={{ fontSize: 12, color: "#78716C", minWidth: 80 }}>Tx Hash</span>
+                      <HashDisplay value={result.tx_hash} type="txhash"/>
+                    </div>}
+                  </div>
+                  <div style={{ display: "flex", gap: 10 }}>
+                    <button className="btn-secondary" style={{ flex: 1 }} onClick={() => { setStep(0); setFile(null); setMessage(""); setReceiver(""); setResult(null); setCompleted([]); }}>
+                      Send Another
+                    </button>
+                    <button className="btn-primary" style={{ flex: 1 }} onClick={() => router.push("/ledger")}>
+                      View in Ledger
+                    </button>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+        </div>
+      </main>
     </>
   );
 }

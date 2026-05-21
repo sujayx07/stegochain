@@ -143,30 +143,29 @@ def upload_bytes_to_ipfs(
 def retrieve_from_ipfs(cid: str, output_path: str = None) -> bytes:
     """
     Retrieve a file from IPFS via the Pinata gateway.
-
-    Parameters
-    ----------
-    cid         : IPFS CID string
-    output_path : if provided, save the retrieved bytes to this path
-
-    Returns
-    -------
-    bytes : the raw file content
-
-    Raises
-    ------
-    ConnectionError : if the gateway returns a non-2xx status
     """
-    url      = f"{_GATEWAY_URL}/{cid}"
-    response = requests.get(url, timeout=_TIMEOUT)
-    _raise_for_error(response)
-
-    content = response.content
-    if output_path:
-        with open(output_path, "wb") as fh:
-            fh.write(content)
-
-    return content
+    urls = [
+        f"{_GATEWAY_URL}/{cid}",
+        f"https://cloudflare-ipfs.com/ipfs/{cid}",
+        f"https://ipfs.io/ipfs/{cid}"
+    ]
+    
+    last_exc = None
+    for url in urls:
+        try:
+            response = requests.get(url, timeout=10)
+            if response.ok:
+                content = response.content
+                if output_path:
+                    with open(output_path, "wb") as fh:
+                        fh.write(content)
+                return content
+        except Exception as exc:
+            last_exc = exc
+            
+    if last_exc:
+        raise ConnectionError(f"Failed to retrieve CID {cid} from all gateways. Last error: {last_exc}")
+    raise ConnectionError(f"Failed to retrieve CID {cid} from all gateways.")
 
 
 def pin_exists(cid: str, pinata_api_key: str, pinata_secret_key: str) -> bool:
