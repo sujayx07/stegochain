@@ -105,9 +105,12 @@ export default function Register() {
         await api
           .post("/api/auth/register-chain-manual", { tx_hash: chainRes.txHash })
           .catch((e) => console.warn("register-chain-manual failed:", e.message));
+        const txLabel = chainRes.alreadyRegistered
+          ? "already on-chain"
+          : (chainRes.txHash || "").slice(0, 10) + "…";
         setSubmitStatus([
           "Account saved ✓",
-          `Chain registered ✓  (tx: ${chainRes.txHash.slice(0, 10)}…)`,
+          `Chain registered ✓  (${txLabel})`,
         ]);
         toast.success("Account created! Welcome to StegoChain.");
         setTimeout(() => router.push("/dashboard"), 1500);

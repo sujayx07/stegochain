@@ -120,27 +120,61 @@ export function WalletProvider({ children }) {
   }
 
   /**
+   * Check if an address is already registered on-chain (read-only, no gas).
+   */
+  async function checkOnChainStatus(userAddress) {
+    if (!CONTRACT_ADDRESS) return false;
+    try {
+      // Use a static provider for read-only call — works even without a signer
+      const rpcProvider = provider || new ethers.JsonRpcProvider(
+        "https://eth-sepolia.g.alchemy.com/v2/8eBBassAJ_lST02IZWB45"
+      );
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, rpcProvider);
+      const profile = await contract.getUser(userAddress);
+      return profile.isRegistered === true;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
    * Register the user ON-CHAIN by calling registerUser() directly from their
    * MetaMask signer. This ensures msg.sender = user's own address, which is
    * what the StegoChainV2 contract uses to map their profile.
    *
-   * @param {string} publicKeyX  — hex string (without 0x prefix)
-   * @param {string} publicKeyY  — hex string (without 0x prefix)
-   * @returns {{ txHash: string, blockNumber: number }}
+   * If the user is ALREADY registered on-chain (contract reverts with
+   * 'already registered'), we skip the tx and return { alreadyRegistered: true }.
+   *
+   * @param {string} publicKeyX  — hex string (with or without 0x prefix)
+   * @param {string} publicKeyY  — hex string (with or without 0x prefix)
+   * @returns {{ txHash: string, blockNumber: number, alreadyRegistered?: bool }}
    */
   async function registerOnChain(publicKeyX, publicKeyY) {
     if (!signer) throw new Error("Wallet not connected. Connect MetaMask first.");
     if (!CONTRACT_ADDRESS) throw new Error("CONTRACT_ADDRESS not configured.");
 
+    const signerAddress = await signer.getAddress();
+
+    // Check on-chain status BEFORE sending a tx that would revert
+    const alreadyOnChain = await checkOnChainStatus(signerAddress);
+    if (alreadyOnChain) {
+      // Already registered on-chain — just tell the caller so MongoDB can be updated
+      return { txHash: "already-registered", blockNumber: 0, alreadyRegistered: true };
+    }
+
     const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
     // Convert hex strings → Uint8Array bytes
-    const xBytes = ethers.getBytes("0x" + publicKeyX.replace(/^0x/, "").padStart(64, "0"));
-    const yBytes = ethers.getBytes("0x" + publicKeyY.replace(/^0x/, "").padStart(64, "0"));
+    const xClean = publicKeyX.replace(/^0x/, "");
+    const yClean = publicKeyY.replace(/^0x/, "");
+    if (!xClean || !yClean) throw new Error("Public key coordinates are empty.");
+
+    const xBytes = ethers.getBytes("0x" + xClean.padStart(64, "0"));
+    const yBytes = ethers.getBytes("0x" + yClean.padStart(64, "0"));
 
     const tx = await contract.registerUser(xBytes, yBytes);
     const receipt = await tx.wait();
-    return { txHash: receipt.hash, blockNumber: receipt.blockNumber };
+    return { txHash: receipt.hash || tx.hash, blockNumber: receipt.blockNumber };
   }
 
   const isCorrectChain = chainId === TARGET_CHAIN_ID;

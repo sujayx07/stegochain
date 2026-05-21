@@ -69,10 +69,18 @@ export default function Dashboard() {
       }
       toast("MetaMask will open — confirm the registration transaction.", { icon: "🦊" });
       const chainRes = await registerOnChain(me.public_key_x, me.public_key_y);
-      // Notify backend
-      await api.post("/api/auth/register-chain-manual", { tx_hash: chainRes.txHash });
-      setChainStatus(true);
-      toast.success(`✅ Registered on-chain! Tx: ${chainRes.txHash.slice(0, 10)}…`);
+
+      if (chainRes.alreadyRegistered) {
+        // Already registered on-chain but MongoDB wasn't updated — sync it now
+        await api.post("/api/auth/register-chain-manual", { tx_hash: "already-registered" });
+        setChainStatus(true);
+        toast.success("✅ Already registered on-chain! Status synced.");
+      } else {
+        // Fresh registration — notify backend with tx hash
+        await api.post("/api/auth/register-chain-manual", { tx_hash: chainRes.txHash });
+        setChainStatus(true);
+        toast.success(`✅ Registered on-chain! Tx: ${chainRes.txHash.slice(0, 10)}…`);
+      }
     } catch (err) {
       const msg = err?.message || String(err);
       if (msg.includes("user rejected") || msg.includes("User denied")) {
