@@ -14,7 +14,7 @@ import { getMySent, getMyReceived, getMe, api } from "../utils/api";
 export default function Dashboard() {
   const router = useRouter();
   const { user, isAuthenticated, loading } = useAuth();
-  const { address, registerOnChain } = useWallet();
+  const { address, registerOnChain, isConnected, isCorrectChain, connect, switchToSepolia } = useWallet();
   const [sent, setSent] = useState([]);
   const [received, setReceived] = useState([]);
   const [loadingSent, setLoadingSent] = useState(true);
@@ -49,6 +49,17 @@ export default function Dashboard() {
 
   async function completeChainReg() {
     if (!user) return;
+
+    // Guard: wallet must be connected
+    if (!isConnected) {
+      try { await connect(); } catch { toast.error("Please connect MetaMask first."); return; }
+    }
+    // Guard: must be on Sepolia
+    if (!isCorrectChain) {
+      toast("Switching to Ethereum Sepolia…", { icon: "🔄" });
+      try { await switchToSepolia(); } catch { toast.error("Please switch MetaMask to Ethereum Sepolia."); return; }
+    }
+
     setRegisteringChain(true);
     try {
       // Fetch the user's public keys from the backend
@@ -56,14 +67,19 @@ export default function Dashboard() {
       if (!me.public_key_x || !me.public_key_y) {
         toast.error("No ECC key pair found. Please re-register."); return;
       }
-      toast("MetaMask will ask you to sign the on-chain registration transaction.", { icon: "🦊" });
+      toast("MetaMask will open — confirm the registration transaction.", { icon: "🦊" });
       const chainRes = await registerOnChain(me.public_key_x, me.public_key_y);
       // Notify backend
       await api.post("/api/auth/register-chain-manual", { tx_hash: chainRes.txHash });
       setChainStatus(true);
-      toast.success(`✅ On-chain registration confirmed! Tx: ${chainRes.txHash.slice(0,10)}…`);
+      toast.success(`✅ Registered on-chain! Tx: ${chainRes.txHash.slice(0, 10)}…`);
     } catch (err) {
-      toast.error("Chain registration failed: " + err.message);
+      const msg = err?.message || String(err);
+      if (msg.includes("user rejected") || msg.includes("User denied")) {
+        toast("Transaction cancelled.", { icon: "❌" });
+      } else {
+        toast.error("Registration failed: " + msg);
+      }
     } finally {
       setRegisteringChain(false);
     }

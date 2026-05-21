@@ -95,36 +95,19 @@ def register():
     )
     db[User.COLLECTION].insert_one(user.to_dict())
 
-    # Attempt on-chain registration
-    chain_result = _try_chain_register(user)
-    chain_ok = "tx_hash" in chain_result
-
-    db[User.COLLECTION].update_one(
-        {"user_id": user.user_id},
-        {"$set": {
-            "chain_registered": chain_ok,
-            "chain_tx_hash":    chain_result.get("tx_hash", ""),
-        }},
-    )
-    user.chain_registered = chain_ok
-    user.chain_tx_hash    = chain_result.get("tx_hash", "")
+    # NOTE: On-chain registration is performed by the frontend via MetaMask.
+    # The /register-chain-manual endpoint marks chain_registered=True after
+    # the user's MetaMask tx is confirmed.
 
     token = generate_token(user.user_id, user.eth_address)
 
-    resp = {
+    return _ok({
         "user_id":       user.user_id,
         "username":      user.username,
         "eth_address":   user.eth_address,
-        "chain_tx_hash": user.chain_tx_hash,
+        "chain_tx_hash": "",
         "token":         token,
-    }
-    if not chain_ok:
-        resp["warning"] = (
-            "On-chain registration failed. "
-            "Use POST /api/auth/register-chain to retry. "
-            f"Reason: {chain_result.get('error', 'unknown')}"
-        )
-    return _ok(resp)
+    })
 
 
 # ── POST /api/auth/login ─────────────────────────────────────────────────────
@@ -190,7 +173,9 @@ def get_by_eth(eth_address):
 @auth_bp.route("/register-chain", methods=["POST"])
 @require_auth
 def register_chain():
-    """Re-attempt on-chain registration for users where chain_registered=False."""
+    """On-chain registration is now MetaMask-driven from the frontend.
+    This endpoint now just checks the current status.
+    Use /register-chain-manual after the MetaMask tx is confirmed."""
     db  = _db()
     doc = db[User.COLLECTION].find_one({"user_id": g.user_id})
     if not doc:
@@ -200,21 +185,10 @@ def register_chain():
     if user.chain_registered:
         return _ok({"message": "Already registered on-chain", "chain_registered": True})
 
-    chain_result = _try_chain_register(user)
-    chain_ok     = "tx_hash" in chain_result
-
-    db[User.COLLECTION].update_one(
-        {"user_id": user.user_id},
-        {"$set": {
-            "chain_registered": chain_ok,
-            "chain_tx_hash":    chain_result.get("tx_hash", ""),
-        }},
-    )
     return _ok({
-        "chain_registered": chain_ok,
-        "chain_tx_hash":    chain_result.get("tx_hash", ""),
-        "message":          "Chain registration succeeded" if chain_ok else "Chain registration failed",
-        **({"error": chain_result.get("error")} if not chain_ok else {}),
+        "chain_registered": False,
+        "message": "Use the dashboard to complete registration via MetaMask, "
+                   "then call /register-chain-manual with the tx_hash.",
     })
 
 
