@@ -338,8 +338,8 @@ def _parse_record(rec) -> dict:
         "sender":          rec[3],
         "receiver":        rec[4],
         "session_id":      rec[5],
-        "merkle_root":     "0x" + rec[6].hex(),
-        "media_hash":      "0x" + rec[7].hex(),
+        "merkle_root":     "0x" + bytes(rec[6]).hex(),
+        "media_hash":      "0x" + bytes(rec[7]).hex(),
         "timestamp":       rec[8],
         "is_active":       rec[9],
         "total_fragments": rec[10],
@@ -536,7 +536,9 @@ def get_contract_stats_v2(w3: Web3, contract) -> dict:
 # ── Merkle tree for AES key fragments ─────────────────────────────────────────
 
 def _keccak(data: bytes) -> bytes:
-    return Web3.keccak(data)
+    # Wrap in bytes() so .hex() returns plain hex without '0x' prefix
+    # (hexbytes >= 1.0.0 changed HexBytes.hex() to include '0x')
+    return bytes(Web3.keccak(data))
 
 
 def _hash_pair_sorted(a: bytes, b: bytes) -> bytes:

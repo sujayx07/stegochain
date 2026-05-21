@@ -265,9 +265,10 @@ def send():
         from web3 import Web3
         with open(stego_path, "rb") as fh:
             stego_bytes = fh.read()
-        media_hash_bytes = Web3.keccak(stego_bytes)
+        media_hash_bytes = bytes(Web3.keccak(stego_bytes))
         media_hash = "0x" + media_hash_bytes.hex()
         txn.media_hash = media_hash
+
 
         # 3 — Generate AES key and encrypt stego file
         step = "encrypt"
