@@ -38,13 +38,15 @@ def generate_ecc_keypair() -> dict:
         public_key  (str) : PEM-encoded public key
     """
     key = ECC.generate(curve=_CURVE)
+    # Zero-pad to 64 hex chars (32 bytes) — hex() returns minimum digits
+    # e.g. a coord starting with 0x00... loses leading zeros without zfill
     return {
         "private_key": key.export_key(format="PEM"),
         "public_key":  key.public_key().export_key(format="PEM"),
         "private_key_pem": key.export_key(format="PEM"),
         "public_key_pem":  key.public_key().export_key(format="PEM"),
-        "public_key_x": hex(int(key.pointQ.x))[2:],
-        "public_key_y": hex(int(key.pointQ.y))[2:],
+        "public_key_x": hex(int(key.pointQ.x))[2:].zfill(64),
+        "public_key_y": hex(int(key.pointQ.y))[2:].zfill(64),
     }
 
 

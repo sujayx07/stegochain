@@ -500,8 +500,11 @@ def _hash_pair(a: bytes, b: bytes) -> bytes:
 
 def _hex_to_bytes32(hex_str: str) -> bytes:
     """Convert a 0x-prefixed hex string to 32 raw bytes."""
-    stripped = hex_str.lstrip("0x")
-    return bytes.fromhex(stripped.zfill(64))
+    h = hex_str.strip()
+    if h.startswith(("0x", "0X")):
+        h = h[2:]
+    return bytes.fromhex(h.zfill(64))
+
 
 
 def _parse_record_tuple(rec) -> dict:

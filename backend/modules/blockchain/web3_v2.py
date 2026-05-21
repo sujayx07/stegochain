@@ -325,8 +325,13 @@ def _send_tx(w3: Web3, tx_fn, private_key: str, gas: int = 400_000) -> dict:
 
 
 def _hex32(hex_str: str) -> bytes:
-    """Convert 0x-prefixed hex string to 32 raw bytes."""
-    return bytes.fromhex(hex_str.lstrip("0x").zfill(64))
+    """Convert 0x-prefixed hex string to 32 raw bytes, safely."""
+    h = hex_str.strip()
+    if h.startswith(("0x", "0X")):
+        h = h[2:]
+    # Zero-pad to 64 hex chars (32 bytes)
+    return bytes.fromhex(h.zfill(64))
+
 
 
 def _parse_record(rec) -> dict:
@@ -433,7 +438,11 @@ def request_decryption_on_chain(
     proof_b32 = [_hex32(p) for p in merkle_proof]
     leaf_b32  = _hex32(leaf_hash)
     ch_b32    = _hex32(challenge_hash)
-    sig_bytes = bytes.fromhex(signature.lstrip("0x"))
+    sig_hex   = signature.strip()
+    if sig_hex.startswith(("0x", "0X")):
+        sig_hex = sig_hex[2:]
+    sig_bytes = bytes.fromhex(sig_hex)
+
 
     tx_fn = contract.functions.requestDecryption(
         record_id, proof_b32, leaf_b32, sig_bytes, ch_b32

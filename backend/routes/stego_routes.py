@@ -293,8 +293,19 @@ def send():
 
         # 6 — Encrypt each fragment with receiver's ECC public key and upload to IPFS
         step = "encrypt_fragments"
-        receiver_pk_x = bytes.fromhex(receiver_doc.get("public_key_x", "").lstrip("0x"))
-        receiver_pk_y = bytes.fromhex(receiver_doc.get("public_key_y", "").lstrip("0x"))
+        # Safe hex conversion: remove only "0x" prefix, zero-pad to even length
+        def _to_hex_bytes(hex_str: str) -> bytes:
+            """Strip 0x prefix safely and convert to bytes, padding to even length."""
+            h = hex_str.strip()
+            if h.startswith("0x") or h.startswith("0X"):
+                h = h[2:]
+            if len(h) % 2 != 0:
+                h = "0" + h          # pad to even length
+            return bytes.fromhex(h) if h else b""
+
+        receiver_pk_x = _to_hex_bytes(receiver_doc.get("public_key_x", ""))
+        receiver_pk_y = _to_hex_bytes(receiver_doc.get("public_key_y", ""))
+
 
         fragment_cids = []
         for i, frag in enumerate(raw_fragments):
@@ -489,8 +500,15 @@ def receive():
         if not receiver_doc:
             return _err("Receiver not found in database", 404)
 
-        pk_x = bytes.fromhex(receiver_doc.get("public_key_x", "").lstrip("0x"))
-        pk_y = bytes.fromhex(receiver_doc.get("public_key_y", "").lstrip("0x"))
+        def _to_hex_bytes_s(hex_str: str) -> bytes:
+            h = hex_str.strip()
+            if h.startswith(("0x", "0X")): h = h[2:]
+            if len(h) % 2 != 0: h = "0" + h
+            return bytes.fromhex(h) if h else b""
+
+        pk_x = _to_hex_bytes_s(receiver_doc.get("public_key_x", ""))
+        pk_y = _to_hex_bytes_s(receiver_doc.get("public_key_y", ""))
+
         key_material = pk_x + pk_y
 
         raw_fragments = []

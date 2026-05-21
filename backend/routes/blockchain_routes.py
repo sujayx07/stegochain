@@ -48,6 +48,18 @@ def _basescan_addr(addr: str) -> str:
     return f"{BASESCAN_BASE}/address/{addr}"
 
 
+def _safe_hex_bytes(hex_str: str) -> bytes:
+    """Safely convert a hex string (with or without 0x prefix) to bytes.
+    Uses [2:] to strip '0x' prefix (not lstrip which strips individual chars),
+    then pads to even length to prevent fromhex() odd-length errors."""
+    h = hex_str.strip()
+    if h.startswith(("0x", "0X")):
+        h = h[2:]
+    if len(h) % 2 != 0:
+        h = "0" + h
+    return bytes.fromhex(h) if h else b""
+
+
 # ── POST /api/blockchain/register-record ─────────────────────────────────────
 
 @blockchain_bp.route("/register-record", methods=["POST"])
@@ -159,8 +171,8 @@ def request_decryption():
         if not receiver_doc:
             return _err("Receiver user not found in database", 404)
 
-        pk_x = bytes.fromhex(receiver_doc.get("public_key_x", "").lstrip("0x"))
-        pk_y = bytes.fromhex(receiver_doc.get("public_key_y", "").lstrip("0x"))
+        pk_x = _safe_hex_bytes(receiver_doc.get("public_key_x", ""))
+        pk_y = _safe_hex_bytes(receiver_doc.get("public_key_y", ""))
         key_material = pk_x + pk_y
 
         raw_fragments_bytes = []
@@ -246,8 +258,8 @@ def decryption_prep():
         if not receiver_doc:
             return _err("Receiver not found in database", 404)
 
-        pk_x = bytes.fromhex(receiver_doc.get("public_key_x", "").lstrip("0x"))
-        pk_y = bytes.fromhex(receiver_doc.get("public_key_y", "").lstrip("0x"))
+        pk_x = _safe_hex_bytes(receiver_doc.get("public_key_x", ""))
+        pk_y = _safe_hex_bytes(receiver_doc.get("public_key_y", ""))
         key_material = pk_x + pk_y
 
         raw_fragments = []

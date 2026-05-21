@@ -46,8 +46,11 @@ def _try_chain_register(user: User) -> dict:
         )
         w3       = get_v2_connection()
         contract = load_v2_contract(w3)
-        pk_x = bytes.fromhex(user.public_key_x.lstrip("0x"))
-        pk_y = bytes.fromhex(user.public_key_y.lstrip("0x"))
+        pk_x_hex = user.public_key_x.strip()
+        pk_y_hex = user.public_key_y.strip()
+        pk_x = bytes.fromhex(pk_x_hex[2:] if pk_x_hex.startswith(("0x","0X")) else pk_x_hex)
+        pk_y = bytes.fromhex(pk_y_hex[2:] if pk_y_hex.startswith(("0x","0X")) else pk_y_hex)
+
         result = register_user_on_chain(
             w3, contract, os.environ.get("PRIVATE_KEY", ""), pk_x, pk_y
         )
