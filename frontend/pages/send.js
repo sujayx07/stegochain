@@ -84,39 +84,98 @@ function StepBar({ steps, current, completed }) {
 /* ── Pipeline progress ──────────────────────────────────────── */
 function PipelineProgress({ steps }) {
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 8, margin: "20px 0" }}>
-      {steps.map((s, i) => (
-        <motion.div key={i}
-          initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-          style={{
-            display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10,
-            background: s.status === "complete" ? "#F0FDF4" : s.status === "loading" ? "#FFF0E6" : s.status === "error" ? "#FEF2F2" : "#F8F7F5",
-            border: `1px solid ${s.status === "complete" ? "#BBF7D0" : s.status === "loading" ? "#FED7AA" : s.status === "error" ? "#FCA5A5" : "#E7E5E4"}`,
-            transition: "all 0.3s ease",
-          }}
-        >
-          <div style={{ fontSize: 16, flexShrink: 0 }}>{s.icon}</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, fontWeight: 700, color: s.status === "complete" ? "#16A34A" : s.status === "loading" ? "#F97316" : s.status === "error" ? "#DC2626" : "#78716C" }}>
-              {s.label}
+    <div style={{ display: "flex", flexDirection: "column", margin: "8px 0" }}>
+      {steps.map((s, i) => {
+        const isDone    = s.status === "complete";
+        const isLoading = s.status === "loading";
+        const isError   = s.status === "error";
+        const isPending = s.status === "pending";
+        const isLast    = i === steps.length - 1;
+
+        return (
+          <div key={i} style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
+
+            {/* Left col: icon + connector line */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 28, flexShrink: 0 }}>
+              {/* Step status icon */}
+              <div style={{ position: "relative", width: 28, height: 28, flexShrink: 0 }}>
+                {/* Background circle */}
+                <div style={{
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: isDone ? "#16A34A" : isLoading ? "white" : isError ? "#FEF2F2" : "#F0EDE9",
+                  border: `2px solid ${isDone ? "#16A34A" : isLoading ? "#FED7AA" : isError ? "#FCA5A5" : "#E7E5E4"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.35s ease",
+                  position: "relative", zIndex: 1,
+                }}>
+                  {isDone && (
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M2 6.5l3 3 6-6" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                  {isLoading && (
+                    /* Spinning ring — orange arc rotating */
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%",
+                      border: "2.5px solid #FED7AA",
+                      borderTopColor: "#F97316",
+                      animation: "spin 0.75s linear infinite",
+                      position: "absolute",
+                    }}/>
+                  )}
+                  {isError && (
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                      <path d="M2 2l8 8M10 2L2 10" stroke="#DC2626" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  )}
+                  {isPending && (
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#D1D5DB" }}/>
+                  )}
+                </div>
+              </div>
+              {/* Connector line */}
+              {!isLast && (
+                <div style={{
+                  width: 2, flex: 1, minHeight: 16,
+                  background: isDone ? "#16A34A" : "#E7E5E4",
+                  transition: "background 0.5s ease",
+                  margin: "3px 0",
+                }}/>
+              )}
             </div>
-            <div style={{ fontSize: 11, color: "#A8A29E" }}>{s.sub}</div>
+
+            {/* Right col: label + sub text */}
+            <div style={{
+              flex: 1, paddingBottom: isLast ? 0 : 14,
+              paddingTop: 3,
+            }}>
+              <div style={{
+                fontSize: 13, fontWeight: 700,
+                color: isDone ? "#16A34A" : isLoading ? "#F97316" : isError ? "#DC2626" : "#A8A29E",
+                transition: "color 0.3s ease",
+                lineHeight: 1.3,
+              }}>
+                {s.label}
+                {isLoading && (
+                  <span style={{
+                    display: "inline-block", marginLeft: 6,
+                    animation: "breathe 1.2s ease-in-out infinite",
+                    fontSize: 11, fontWeight: 500, color: "#F97316",
+                  }}>
+                    Processing…
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 11, color: "#A8A29E", marginTop: 1 }}>{s.sub}</div>
+            </div>
+
           </div>
-          <div style={{ flexShrink: 0 }}>
-            {s.status === "complete" && (
-              <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 300 }}>
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="8" fill="#16A34A"/><path d="M4 8l3 3 5-6" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
-              </motion.div>
-            )}
-            {s.status === "loading" && <div className="spinner spinner-sm" style={{ width: 16, height: 16, borderWidth: 2, borderTopColor: "#F97316", borderColor: "#FED7AA" }} />}
-            {s.status === "error" && <span style={{ fontSize: 14 }}>❌</span>}
-            {s.status === "pending" && <div style={{ width: 16, height: 16, borderRadius: "50%", background: "#E7E5E4" }} />}
-          </div>
-        </motion.div>
-      ))}
+        );
+      })}
     </div>
   );
 }
+
 
 export default function Send() {
   const router  = useRouter();
@@ -465,13 +524,41 @@ export default function Send() {
                 {/* Processing */}
                 {!result && !sendError && (
                   <>
-                    <div style={{ textAlign: "center", marginBottom: 20 }}>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: "#1C1917" }}>Processing your message…</div>
-                      <div style={{ fontSize: 13, color: "#78716C", marginTop: 4 }}>This usually takes 15–30 seconds</div>
+                    <div style={{ textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: "1px solid #F0EDE9" }}>
+                      {/* Animated spinner ring */}
+                      <div style={{ position: "relative", width: 52, height: 52, margin: "0 auto 14px" }}>
+                        <div style={{
+                          width: 52, height: 52, borderRadius: "50%",
+                          border: "3px solid #FED7AA",
+                          borderTopColor: "#F97316",
+                          animation: "spin 0.9s linear infinite",
+                        }}/>
+                        <div style={{
+                          position: "absolute", inset: 8, borderRadius: "50%",
+                          background: "linear-gradient(135deg,#FFF0E6,#FFE4CC)",
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          fontSize: 18,
+                        }}>
+                          🔐
+                        </div>
+                      </div>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#1C1917" }}>
+                        Processing your message
+                        <span style={{ display: "inline-flex", gap: 2, marginLeft: 1, verticalAlign: "middle" }}>
+                          {[0, 0.25, 0.5].map((d, i) => (
+                            <span key={i} style={{
+                              display: "inline-block", width: 4, height: 4, borderRadius: "50%",
+                              background: "#F97316", animation: `breathe 1.2s ease-in-out ${d}s infinite`,
+                            }}/>
+                          ))}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: "#A8A29E", marginTop: 5 }}>Usually takes 15–30 seconds — stay on this page</div>
                     </div>
                     <PipelineProgress steps={pipeline} />
                   </>
                 )}
+
 
                 {/* Error */}
                 {sendError && !result && (

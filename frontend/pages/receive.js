@@ -42,90 +42,209 @@ function LockReveal({ revealed, onDone }) {
     <motion.div
       initial={{ opacity: 0, scale: 0.8 }}
       animate={{ opacity: 1, scale: 1 }}
-      style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 0", gap: 16 }}
+      style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "40px 0", gap: 20 }}
     >
-      {/* Animated lock */}
-      <motion.div
-        animate={revealed ? { rotate: [0, -12, 12, -6, 6, 0], scale: [1, 1.1, 1] } : { rotate: [0, -3, 3, 0] }}
-        transition={revealed ? { duration: 0.7, ease: "easeInOut" } : { duration: 2, repeat: Infinity, ease: "easeInOut" }}
-        onAnimationComplete={() => revealed && onDone?.()}
-        style={{ fontSize: 64, userSelect: "none", filter: revealed ? "drop-shadow(0 0 20px rgba(22,163,74,0.5))" : "drop-shadow(0 4px 12px rgba(249,115,22,0.3))" }}
-      >
-        {revealed ? "🔓" : "🔒"}
-      </motion.div>
+      {/* Lock with pulsing halo */}
+      <div style={{ position: "relative", display: "flex", alignItems: "center", justifyContent: "center" }}>
 
-      {/* Status text */}
-      <motion.div
-        animate={{ opacity: [0.6, 1, 0.6] }}
-        transition={{ duration: 1.5, repeat: Infinity }}
-        style={{ fontSize: 14, color: "#78716C", fontWeight: 500 }}
-      >
-        {revealed ? "Decryption authorised" : "Awaiting authorisation…"}
-      </motion.div>
+        {/* Pulsing halo rings — only shown while waiting */}
+        {!revealed && (<>
+          <div style={{
+            position: "absolute", width: 100, height: 100, borderRadius: "50%",
+            border: "2px solid rgba(249,115,22,0.35)",
+            animation: "ping 1.6s ease-out infinite",
+          }}/>
+          <div style={{
+            position: "absolute", width: 100, height: 100, borderRadius: "50%",
+            border: "2px solid rgba(249,115,22,0.2)",
+            animation: "ping 1.6s ease-out 0.5s infinite",
+          }}/>
+        </>)}
 
-      {/* Orbiting rings */}
-      <div style={{ position: "relative", width: 120, height: 120, margin: "0 auto" }}>
-        {[0, 1, 2].map(i => (
-          <motion.div
-            key={i}
-            animate={{ rotate: 360 * (i % 2 === 0 ? 1 : -1) }}
-            transition={{ duration: 3 + i, repeat: Infinity, ease: "linear" }}
+        {/* Green success halo */}
+        {revealed && (
+          <div style={{
+            position: "absolute", width: 110, height: 110, borderRadius: "50%",
+            background: "radial-gradient(circle,rgba(22,163,74,0.15),transparent 70%)",
+            animation: "scaleIn 0.5s ease forwards",
+          }}/>
+        )}
+
+        {/* The lock emoji with CSS animation */}
+        <motion.div
+          animate={revealed
+            ? { rotate: [0, -15, 15, -8, 8, 0], scale: [1, 1.15, 1] }
+            : { y: [0, -4, 0] }
+          }
+          transition={revealed
+            ? { duration: 0.6, ease: "easeInOut" }
+            : { duration: 1.8, repeat: Infinity, ease: "easeInOut" }
+          }
+          onAnimationComplete={() => revealed && onDone?.()}
+          style={{
+            fontSize: 64, userSelect: "none", lineHeight: 1,
+            filter: revealed
+              ? "drop-shadow(0 0 18px rgba(22,163,74,0.6))"
+              : "drop-shadow(0 6px 14px rgba(249,115,22,0.35))",
+            transition: "filter 0.6s ease",
+          }}
+        >
+          {revealed ? "🔓" : "🔒"}
+        </motion.div>
+      </div>
+
+      {/* Status text with blinking dots */}
+      <div style={{ textAlign: "center" }}>
+        <div style={{ fontSize: 14, color: revealed ? "#16A34A" : "#78716C", fontWeight: 600, transition: "color 0.5s ease" }}>
+          {revealed ? "Decryption authorised" : "Awaiting authorisation"}
+          {!revealed && (
+            <span style={{ display: "inline-flex", gap: 2, marginLeft: 2 }}>
+              {[0, 0.2, 0.4].map((delay, i) => (
+                <span key={i} style={{
+                  display: "inline-block", width: 3, height: 3, borderRadius: "50%",
+                  background: "#F97316", marginBottom: 1,
+                  animation: `breathe 1.2s ease-in-out ${delay}s infinite`,
+                }}/>
+              ))}
+            </span>
+          )}
+        </div>
+        {!revealed && (
+          <div style={{ fontSize: 12, color: "#A8A29E", marginTop: 4 }}>
+            MetaMask signature verification in progress
+          </div>
+        )}
+      </div>
+
+      {/* Orbiting rings — key prop fixed so React animates properly */}
+      <div style={{ position: "relative", width: 120, height: 120 }}>
+        {[
+          { size: 0,  speed: "3s",   dir: "normal",  dash: "solid",  opacity: 0.30 },
+          { size: 12, speed: "4.5s", dir: "reverse", dash: "dashed", opacity: 0.20 },
+          { size: 24, speed: "6s",   dir: "normal",  dash: "dashed", opacity: 0.12 },
+        ].map((ring, i) => (
+          <div
+            key={`ring-${i}`}
             style={{
-              position: "absolute", inset: i * 12, borderRadius: "50%",
-              border: `1.5px ${i === 0 ? "solid" : "dashed"} rgba(249,115,22,${0.3 - i * 0.08})`,
+              position: "absolute",
+              top: ring.size, right: ring.size, bottom: ring.size, left: ring.size,
+              borderRadius: "50%",
+              border: `1.5px ${ring.dash} rgba(249,115,22,${ring.opacity})`,
+              animation: `spin ${ring.speed} linear infinite`,
+              animationDirection: ring.dir,
             }}
           />
         ))}
+        {/* Centre dot */}
         <div style={{
           position: "absolute", inset: 36, borderRadius: "50%",
-          background: revealed ? "rgba(22,163,74,0.12)" : "rgba(249,115,22,0.12)",
+          background: revealed ? "rgba(22,163,74,0.15)" : "rgba(249,115,22,0.1)",
           display: "flex", alignItems: "center", justifyContent: "center",
           transition: "background 0.8s ease",
         }}>
-          <div style={{ width: 16, height: 16, borderRadius: "50%", background: revealed ? "#16A34A" : "#F97316", transition: "background 0.8s ease" }} />
+          <div style={{
+            width: 14, height: 14, borderRadius: "50%",
+            background: revealed ? "#16A34A" : "#F97316",
+            transition: "background 0.8s ease",
+            animation: "breathe 1.5s ease-in-out infinite",
+          }}/>
         </div>
       </div>
     </motion.div>
   );
 }
 
-/* ── Step progress bar ──────────────────────────────────────── */
+
+/* ── Step progress (vertical timeline) ──────────────────────── */
 function StepProgress({ currentPhase }) {
-  const steps = ["fetching","verifying","assembling","decrypting"];
-  const idx = steps.indexOf(currentPhase);
+  const STEPS = [
+    { id: "fetching",    label: "Fetching from IPFS",        sub: "Retrieving encrypted file" },
+    { id: "verifying",   label: "Verifying blockchain proof", sub: "Checking Merkle signature" },
+    { id: "assembling",  label: "Assembling key fragments",   sub: "Threshold reconstruction" },
+    { id: "decrypting",  label: "Decrypting message",         sub: "AES-256-GCM + steganography" },
+  ];
+  const idx = STEPS.findIndex(s => s.id === currentPhase);
+
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: 0, marginBottom: 24 }}>
-      {steps.map((s, i) => {
-        const done = i < idx;
-        const active = i === idx;
+    <div style={{ margin: "16px 0 8px" }}>
+      {STEPS.map((s, i) => {
+        const isDone    = i < idx;
+        const isActive  = i === idx;
+        const isPending = i > idx;
+        const isLast    = i === STEPS.length - 1;
+
         return (
-          <div key={s} style={{ display: "flex", alignItems: "center", flex: i < steps.length - 1 ? 1 : 0 }}>
-            <div style={{
-              width: 28, height: 28, borderRadius: "50%", flexShrink: 0,
-              background: done ? "#16A34A" : active ? "#F97316" : "#E7E5E4",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              transition: "all 0.4s ease",
-              boxShadow: active ? "0 0 0 4px rgba(249,115,22,0.2)" : "none",
-            }}>
-              {done ? (
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 7l3.5 3.5L12 4" stroke="white" strokeWidth="2" strokeLinecap="round"/>
-                </svg>
-              ) : active ? (
-                <div style={{ width: 8, height: 8, borderRadius: "50%", background: "white", animation: "pulse-ring-orange 1.5s infinite" }} />
-              ) : (
-                <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#A8A29E" }} />
+          <div key={s.id} style={{ display: "flex", gap: 14, alignItems: "stretch" }}>
+
+            {/* Left: circle + connector */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 28, flexShrink: 0 }}>
+              <div style={{ position: "relative", width: 28, height: 28, flexShrink: 0 }}>
+                <div style={{
+                  width: 28, height: 28, borderRadius: "50%",
+                  background: isDone ? "#16A34A" : isActive ? "white" : "#F0EDE9",
+                  border: `2px solid ${isDone ? "#16A34A" : isActive ? "#FED7AA" : "#E7E5E4"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  transition: "all 0.35s ease",
+                  position: "relative", zIndex: 1,
+                }}>
+                  {isDone && (
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M2 6.5l3 3 6-6" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+                    </svg>
+                  )}
+                  {isActive && (
+                    <div style={{
+                      width: 22, height: 22, borderRadius: "50%",
+                      border: "2.5px solid #FED7AA",
+                      borderTopColor: "#F97316",
+                      animation: "spin 0.75s linear infinite",
+                      position: "absolute",
+                    }}/>
+                  )}
+                  {isPending && (
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#D1D5DB" }}/>
+                  )}
+                </div>
+              </div>
+              {!isLast && (
+                <div style={{
+                  width: 2, flex: 1, minHeight: 14,
+                  background: isDone ? "#16A34A" : "#E7E5E4",
+                  transition: "background 0.5s ease",
+                  margin: "3px 0",
+                }}/>
               )}
             </div>
-            {i < steps.length - 1 && (
-              <div style={{ flex: 1, height: 2, background: done ? "#16A34A" : "#E7E5E4", transition: "background 0.6s ease", margin: "0 4px" }} />
-            )}
+
+            {/* Right: labels */}
+            <div style={{ flex: 1, paddingBottom: isLast ? 0 : 12, paddingTop: 3 }}>
+              <div style={{
+                fontSize: 13, fontWeight: 700,
+                color: isDone ? "#16A34A" : isActive ? "#F97316" : "#A8A29E",
+                transition: "color 0.3s ease",
+              }}>
+                {s.label}
+                {isActive && (
+                  <span style={{ display: "inline-flex", gap: 2, marginLeft: 5 }}>
+                    {[0, 0.2, 0.4].map((d, j) => (
+                      <span key={j} style={{
+                        display: "inline-block", width: 3, height: 3, borderRadius: "50%",
+                        background: "#F97316", animation: `breathe 1.2s ease-in-out ${d}s infinite`,
+                      }}/>
+                    ))}
+                  </span>
+                )}
+              </div>
+              <div style={{ fontSize: 11, color: "#A8A29E", marginTop: 1 }}>{s.sub}</div>
+            </div>
+
           </div>
         );
       })}
     </div>
   );
 }
+
 
 /* ── Confetti effect ────────────────────────────────────────── */
 function Confetti() {

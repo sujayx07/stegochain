@@ -2,26 +2,15 @@ import "../styles/globals.css";
 import { Toaster } from "react-hot-toast";
 import { AuthProvider } from "../context/AuthContext";
 import { WalletProvider } from "../context/WalletContext";
-import { motion, AnimatePresence } from "framer-motion";
-import { useRouter } from "next/router";
+
+// NOTE: Removed AnimatePresence page wrapper — it caused hydration lag
+// Individual page components handle their own entrance animations
 
 export default function App({ Component, pageProps }) {
-  const router = useRouter();
   return (
     <AuthProvider>
       <WalletProvider>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={router.pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2, ease: "easeInOut" }}
-          >
-            <Component {...pageProps} />
-          </motion.div>
-        </AnimatePresence>
-
+        <Component {...pageProps} />
         <Toaster
           position="top-right"
           gutter={10}

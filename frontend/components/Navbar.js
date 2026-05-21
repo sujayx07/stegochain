@@ -72,18 +72,13 @@ export default function Navbar() {
 
   return (
     <>
-      <motion.nav
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: "easeOut" }}
+      <nav
         style={{
-          background: scrolled ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.98)",
-          backdropFilter: "blur(20px)",
-          WebkitBackdropFilter: "blur(20px)",
+          background: scrolled ? "rgba(255,255,255,0.98)" : "white",
           borderBottom: `1px solid ${scrolled ? "#E7E5E4" : "#F0EDE9"}`,
           position: "sticky", top: 0, zIndex: 200,
           boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.06)" : "none",
-          transition: "all 0.3s ease",
+          transition: "box-shadow 0.3s ease, border-color 0.3s ease",
         }}
       >
         <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", height: 64, gap: 8 }}>
@@ -160,7 +155,11 @@ export default function Navbar() {
             {/* Hamburger */}
             <button onClick={() => setMobileOpen(o => !o)} className="btn-icon show-mobile" style={{ padding: 8 }}>
               <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
-                <motion.path animate={{ d: mobileOpen ? "M4 4L16 16M16 4L4 16" : "M3 5h14M3 10h14M3 15h14" }} transition={{ duration: 0.2 }} stroke="#1C1917" strokeWidth="1.8" strokeLinecap="round"/>
+                {mobileOpen ? (
+                  <path d="M4 4L16 16M16 4L4 16" stroke="#1C1917" strokeWidth="1.8" strokeLinecap="round"/>
+                ) : (
+                  <><path d="M3 5h14" stroke="#1C1917" strokeWidth="1.8" strokeLinecap="round"/><path d="M3 10h14" stroke="#1C1917" strokeWidth="1.8" strokeLinecap="round"/><path d="M3 15h14" stroke="#1C1917" strokeWidth="1.8" strokeLinecap="round"/></>
+                )}
               </svg>
             </button>
           </div>
@@ -195,7 +194,7 @@ export default function Navbar() {
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.nav>
+      </nav>
 
       {/* Wrong chain banner */}
       <AnimatePresence>

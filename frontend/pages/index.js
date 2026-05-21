@@ -1,39 +1,36 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { motion, useInView, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import Navbar from "../components/Navbar";
 import { getBlockchainStats, getGraphSummary } from "../utils/api";
 
 /* ── Count-up hook ─────────────────────────────────────────── */
-function useCountUp(target, duration = 1800) {
+function useCountUp(target, duration = 1600) {
   const [val, setVal] = useState(0);
   useEffect(() => {
     if (!target) return;
+    let raf;
     let start = null;
     const step = (ts) => {
       if (!start) start = ts;
       const p = Math.min((ts - start) / duration, 1);
       const ease = 1 - Math.pow(1 - p, 3);
       setVal(Math.floor(ease * target));
-      if (p < 1) requestAnimationFrame(step);
+      if (p < 1) raf = requestAnimationFrame(step);
     };
-    requestAnimationFrame(step);
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf); // cleanup on unmount
   }, [target]);
   return val;
 }
 
-/* ── Animated stat card ───────────────────────────────────── */
+/* ── Animated stat card — CSS animation, no JS observer ──── */
 function StatCard({ label, value, icon, link, delay = 0 }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
-  const animated = useCountUp(inView && typeof value === "number" ? value : null);
-
+  const animated = useCountUp(typeof value === "number" ? value : null);
   return (
-    <motion.div ref={ref}
-      initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+    <div
       className="card card-hover"
-      style={{ padding: "24px 28px", flex: 1, minWidth: 180, position: "relative", overflow: "hidden" }}
+      style={{ padding: "24px 28px", flex: 1, minWidth: 180, position: "relative", overflow: "hidden", animation: `fadeUp 0.5s ease forwards ${delay}s`, opacity: 0 }}
     >
       <div style={{ position: "absolute", top: -20, right: -20, fontSize: 64, opacity: 0.04, userSelect: "none" }}>{icon}</div>
       <div style={{ fontSize: 32, fontWeight: 800, color: "#F97316", letterSpacing: "-0.02em", lineHeight: 1 }}>
@@ -45,21 +42,16 @@ function StatCard({ label, value, icon, link, delay = 0 }) {
           View on Etherscan <span style={{ fontSize: 12 }}>↗</span>
         </a>
       )}
-    </motion.div>
+    </div>
   );
 }
 
-/* ── Feature card ─────────────────────────────────────────── */
+/* ── Feature card — CSS animation ───────────────────────── */
 function FeatureCard({ icon, title, sub, desc, delay }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-50px" });
   return (
-    <motion.div ref={ref}
-      initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ delay, duration: 0.5, ease: "easeOut" }}
-      className="card"
-      whileHover={{ y: -6, boxShadow: "0 16px 40px rgba(0,0,0,0.1)", borderColor: "#FED7AA" }}
-      style={{ padding: "32px 28px", cursor: "default", transition: "border-color 0.2s" }}
+    <div
+      className="card card-hover"
+      style={{ padding: "32px 28px", cursor: "default", animation: `fadeUp 0.5s ease forwards ${delay + 0.1}s`, opacity: 0 }}
     >
       <div style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg,#FFF0E6,#FFE4CC)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, marginBottom: 18, border: "1px solid #FED7AA" }}>
         {icon}
@@ -67,55 +59,52 @@ function FeatureCard({ icon, title, sub, desc, delay }) {
       <div style={{ fontSize: 11, fontWeight: 700, color: "#F97316", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>{sub}</div>
       <h3 style={{ fontSize: 19, fontWeight: 700, color: "#1C1917", marginBottom: 10, letterSpacing: "-0.01em" }}>{title}</h3>
       <p style={{ fontSize: 14, color: "#78716C", lineHeight: 1.7, margin: 0 }}>{desc}</p>
-    </motion.div>
+    </div>
   );
 }
 
-/* ── Pipeline step ─────────────────────────────────────────── */
+/* ── Pipeline step — CSS animation ───────────────────── */
 function PipeStep({ n, icon, label, desc, active, delay }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true });
   return (
-    <motion.div ref={ref}
-      initial={{ opacity: 0, scale: 0.9 }} animate={inView ? { opacity: 1, scale: 1 } : {}}
-      transition={{ delay, duration: 0.4, type: "spring", stiffness: 200 }}
-      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, maxWidth: 130, textAlign: "center" }}
+    <div
+      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, maxWidth: 130, textAlign: "center", animation: `fadeUp 0.4s ease forwards ${delay}s`, opacity: 0 }}
     >
-      <motion.div
-        whileHover={{ scale: 1.1, boxShadow: "0 8px 20px rgba(249,115,22,0.25)" }}
-        style={{ width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg,#FFF0E6,#FFE4CC)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, border: "2px solid #FED7AA", position: "relative", transition: "all 0.25s" }}
+      <div
+        onMouseEnter={e => { e.currentTarget.style.transform = "scale(1.1)"; e.currentTarget.style.boxShadow = "0 8px 20px rgba(249,115,22,0.25)"; }}
+        onMouseLeave={e => { e.currentTarget.style.transform = "scale(1)"; e.currentTarget.style.boxShadow = "none"; }}
+        style={{ width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg,#FFF0E6,#FFE4CC)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, border: "2px solid #FED7AA", position: "relative", transition: "all 0.25s ease", cursor: "default" }}
       >
         {icon}
         <div style={{ position: "absolute", top: -6, right: -6, width: 22, height: 22, borderRadius: "50%", background: "#F97316", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{n}</div>
-      </motion.div>
+      </div>
       <div style={{ fontWeight: 700, fontSize: 14, color: "#1C1917" }}>{label}</div>
       <div style={{ fontSize: 12, color: "#78716C", lineHeight: 1.5 }}>{desc}</div>
-    </motion.div>
+    </div>
   );
 }
 
-/* ── Floating orb ─────────────────────────────────────────── */
-function FloatingOrb({ size, x, y, delay, duration, color }) {
+/* ── Floating orb — pure CSS, no JS animation, no blur ────── */
+// REMOVED: filter:blur + JS animate was causing GPU jank on every frame
+function FloatingOrb({ size, x, y, delay, color }) {
   return (
-    <motion.div
-      animate={{ y: [0, -20, 0], x: [0, 8, 0], opacity: [0.6, 1, 0.6] }}
-      transition={{ duration, delay, repeat: Infinity, ease: "easeInOut" }}
-      style={{ position: "absolute", width: size, height: size, borderRadius: "50%", background: color, filter: "blur(40px)", top: y, left: x, pointerEvents: "none", zIndex: 0 }}
-    />
+    <div style={{
+      position: "absolute", width: size, height: size, borderRadius: "50%",
+      background: color, top: y, left: x, pointerEvents: "none", zIndex: 0,
+      animation: `float ${6}s ease-in-out ${delay}s infinite`,
+    }}/>
   );
 }
 
-/* ── Tech badge ───────────────────────────────────────────── */
+/* ── Tech badge — plain div with CSS hover ────────────────── */
 function TechBadge({ label }) {
   return (
-    <motion.div
-      whileHover={{ scale: 1.05, y: -2 }}
-      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 20, background: "white", border: "1.5px solid #E7E5E4", fontSize: 12, fontWeight: 600, color: "#1C1917", boxShadow: "0 2px 6px rgba(0,0,0,0.04)", cursor: "default", transition: "border-color 0.2s" }}
-      onHoverStart={e => e.target.style.borderColor = "#FED7AA"}
-      onHoverEnd={e => e.target.style.borderColor = "#E7E5E4"}
+    <div
+      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 20, background: "white", border: "1.5px solid #E7E5E4", fontSize: 12, fontWeight: 600, color: "#1C1917", boxShadow: "0 2px 6px rgba(0,0,0,0.04)", cursor: "default", transition: "all 0.2s" }}
+      onMouseEnter={e => { e.currentTarget.style.borderColor = "#FED7AA"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+      onMouseLeave={e => { e.currentTarget.style.borderColor = "#E7E5E4"; e.currentTarget.style.transform = "translateY(0)"; }}
     >
       {label}
-    </motion.div>
+    </div>
   );
 }
 
@@ -128,8 +117,11 @@ export default function Home() {
   const BASESCAN = process.env.NEXT_PUBLIC_BASESCAN_URL;
 
   useEffect(() => {
+    // Load stats immediately (lightweight call)
     getBlockchainStats().then(setStats).catch(() => {});
-    getGraphSummary().then(setGraph).catch(() => {});
+    // Defer graph summary — it's slower and not needed for first paint
+    const t = setTimeout(() => getGraphSummary().then(setGraph).catch(() => {}), 1500);
+    return () => clearTimeout(t);
   }, []);
 
   return (
@@ -140,9 +132,9 @@ export default function Home() {
         {/* ── Hero ──────────────────────────────────────────── */}
         <section style={{ position: "relative", maxWidth: 1100, margin: "0 auto", padding: "90px 24px 70px", textAlign: "center", overflow: "hidden" }}>
           {/* Background orbs */}
-          <FloatingOrb size={400} x="-10%" y="-5%" delay={0} duration={8} color="rgba(249,115,22,0.06)" />
-          <FloatingOrb size={300} x="70%" y="10%" delay={2} duration={10} color="rgba(245,158,11,0.05)" />
-          <FloatingOrb size={200} x="40%" y="50%" delay={4} duration={7} color="rgba(249,115,22,0.04)" />
+          <FloatingOrb size={400} x="-10%" y="-5%" delay={0} color="rgba(249,115,22,0.06)" />
+          <FloatingOrb size={300} x="70%" y="10%" delay={2} color="rgba(245,158,11,0.05)" />
+          <FloatingOrb size={200} x="40%" y="50%" delay={4} color="rgba(249,115,22,0.04)" />
 
           {/* Badge */}
           <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
