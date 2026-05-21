@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
 import { getBlockchainStats, getGraphSummary } from "../utils/api";
 
-function useCountUp(target, duration = 1500) {
+/* ── Count-up hook ─────────────────────────────────────────── */
+function useCountUp(target, duration = 1800) {
   const [val, setVal] = useState(0);
   useEffect(() => {
     if (!target) return;
@@ -12,26 +13,113 @@ function useCountUp(target, duration = 1500) {
     const step = (ts) => {
       if (!start) start = ts;
       const p = Math.min((ts - start) / duration, 1);
-      setVal(Math.floor(p * target));
+      const ease = 1 - Math.pow(1 - p, 3);
+      setVal(Math.floor(ease * target));
       if (p < 1) requestAnimationFrame(step);
     };
     requestAnimationFrame(step);
-  }, [target, duration]);
+  }, [target]);
   return val;
 }
 
-function StatCard({ label, value, link }) {
-  const animated = useCountUp(typeof value === "number" ? value : null);
+/* ── Animated stat card ───────────────────────────────────── */
+function StatCard({ label, value, icon, link, delay = 0 }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  const animated = useCountUp(inView && typeof value === "number" ? value : null);
+
   return (
-    <div className="card" style={{ padding: "20px 24px", flex: 1, minWidth: 160 }}>
-      <div style={{ fontSize: 28, fontWeight: 700, color: "#F97316" }}>
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 20 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+      className="card card-hover"
+      style={{ padding: "24px 28px", flex: 1, minWidth: 180, position: "relative", overflow: "hidden" }}
+    >
+      <div style={{ position: "absolute", top: -20, right: -20, fontSize: 64, opacity: 0.04, userSelect: "none" }}>{icon}</div>
+      <div style={{ fontSize: 32, fontWeight: 800, color: "#F97316", letterSpacing: "-0.02em", lineHeight: 1 }}>
         {typeof value === "number" ? animated.toLocaleString() : (value || "—")}
       </div>
-      <div style={{ fontSize: 13, color: "#78716C", marginTop: 4 }}>{label}</div>
-      {link && <a href={link} target="_blank" rel="noopener noreferrer" style={{ fontSize: 11, color: "#F97316", textDecoration: "none", marginTop: 4, display: "block" }}>View on Etherscan →</a>}
-    </div>
+      <div style={{ fontSize: 13, color: "#78716C", marginTop: 6, fontWeight: 500 }}>{label}</div>
+      {link && (
+        <a href={link} target="_blank" rel="noopener noreferrer" style={{ display: "inline-flex", alignItems: "center", gap: 4, fontSize: 11, color: "#F97316", textDecoration: "none", marginTop: 8, fontWeight: 600, letterSpacing: "0.02em" }}>
+          View on Etherscan <span style={{ fontSize: 12 }}>↗</span>
+        </a>
+      )}
+    </motion.div>
   );
 }
+
+/* ── Feature card ─────────────────────────────────────────── */
+function FeatureCard({ icon, title, sub, desc, delay }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true, margin: "-50px" });
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, y: 30 }} animate={inView ? { opacity: 1, y: 0 } : {}}
+      transition={{ delay, duration: 0.5, ease: "easeOut" }}
+      className="card"
+      whileHover={{ y: -6, boxShadow: "0 16px 40px rgba(0,0,0,0.1)", borderColor: "#FED7AA" }}
+      style={{ padding: "32px 28px", cursor: "default", transition: "border-color 0.2s" }}
+    >
+      <div style={{ width: 52, height: 52, borderRadius: 14, background: "linear-gradient(135deg,#FFF0E6,#FFE4CC)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, marginBottom: 18, border: "1px solid #FED7AA" }}>
+        {icon}
+      </div>
+      <div style={{ fontSize: 11, fontWeight: 700, color: "#F97316", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: 6 }}>{sub}</div>
+      <h3 style={{ fontSize: 19, fontWeight: 700, color: "#1C1917", marginBottom: 10, letterSpacing: "-0.01em" }}>{title}</h3>
+      <p style={{ fontSize: 14, color: "#78716C", lineHeight: 1.7, margin: 0 }}>{desc}</p>
+    </motion.div>
+  );
+}
+
+/* ── Pipeline step ─────────────────────────────────────────── */
+function PipeStep({ n, icon, label, desc, active, delay }) {
+  const ref = useRef(null);
+  const inView = useInView(ref, { once: true });
+  return (
+    <motion.div ref={ref}
+      initial={{ opacity: 0, scale: 0.9 }} animate={inView ? { opacity: 1, scale: 1 } : {}}
+      transition={{ delay, duration: 0.4, type: "spring", stiffness: 200 }}
+      style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, maxWidth: 130, textAlign: "center" }}
+    >
+      <motion.div
+        whileHover={{ scale: 1.1, boxShadow: "0 8px 20px rgba(249,115,22,0.25)" }}
+        style={{ width: 60, height: 60, borderRadius: "50%", background: "linear-gradient(135deg,#FFF0E6,#FFE4CC)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 26, border: "2px solid #FED7AA", position: "relative", transition: "all 0.25s" }}
+      >
+        {icon}
+        <div style={{ position: "absolute", top: -6, right: -6, width: 22, height: 22, borderRadius: "50%", background: "#F97316", color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{n}</div>
+      </motion.div>
+      <div style={{ fontWeight: 700, fontSize: 14, color: "#1C1917" }}>{label}</div>
+      <div style={{ fontSize: 12, color: "#78716C", lineHeight: 1.5 }}>{desc}</div>
+    </motion.div>
+  );
+}
+
+/* ── Floating orb ─────────────────────────────────────────── */
+function FloatingOrb({ size, x, y, delay, duration, color }) {
+  return (
+    <motion.div
+      animate={{ y: [0, -20, 0], x: [0, 8, 0], opacity: [0.6, 1, 0.6] }}
+      transition={{ duration, delay, repeat: Infinity, ease: "easeInOut" }}
+      style={{ position: "absolute", width: size, height: size, borderRadius: "50%", background: color, filter: "blur(40px)", top: y, left: x, pointerEvents: "none", zIndex: 0 }}
+    />
+  );
+}
+
+/* ── Tech badge ───────────────────────────────────────────── */
+function TechBadge({ label }) {
+  return (
+    <motion.div
+      whileHover={{ scale: 1.05, y: -2 }}
+      style={{ display: "inline-flex", alignItems: "center", gap: 6, padding: "6px 14px", borderRadius: 20, background: "white", border: "1.5px solid #E7E5E4", fontSize: 12, fontWeight: 600, color: "#1C1917", boxShadow: "0 2px 6px rgba(0,0,0,0.04)", cursor: "default", transition: "border-color 0.2s" }}
+      onHoverStart={e => e.target.style.borderColor = "#FED7AA"}
+      onHoverEnd={e => e.target.style.borderColor = "#E7E5E4"}
+    >
+      {label}
+    </motion.div>
+  );
+}
+
+const TECH_STACK = ["Ethereum Sepolia", "Solidity 0.8.19", "IPFS + Pinata", "AES-256-GCM", "ECC P-256", "PyTorch Geometric", "Next.js 14", "MetaMask"];
 
 export default function Home() {
   const [stats, setStats] = useState(null);
@@ -46,183 +134,268 @@ export default function Home() {
 
   return (
     <>
-      <Navbar/>
-      <main style={{ minHeight: "100vh", background: "#F8F7F5" }}>
+      <Navbar />
+      <main style={{ minHeight: "100vh", background: "#F8F7F5", overflowX: "hidden" }}>
 
-        {/* Hero */}
-        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "80px 24px 60px", textAlign: "center", position: "relative", overflow: "hidden" }}>
-          {/* Particle decorations */}
-          {[...Array(6)].map((_, i) => (
-            <div key={i} style={{
-              position: "absolute",
-              width: 8 + (i * 4), height: 8 + (i * 4),
-              borderRadius: "50%",
-              background: "#F97316",
-              opacity: 0.07 + i * 0.015,
-              top: `${15 + i * 12}%`,
-              left: `${5 + i * 15}%`,
-              animation: `float${i} ${4 + i}s ease-in-out infinite`,
-              pointerEvents: "none"
-            }}/>
-          ))}
+        {/* ── Hero ──────────────────────────────────────────── */}
+        <section style={{ position: "relative", maxWidth: 1100, margin: "0 auto", padding: "90px 24px 70px", textAlign: "center", overflow: "hidden" }}>
+          {/* Background orbs */}
+          <FloatingOrb size={400} x="-10%" y="-5%" delay={0} duration={8} color="rgba(249,115,22,0.06)" />
+          <FloatingOrb size={300} x="70%" y="10%" delay={2} duration={10} color="rgba(245,158,11,0.05)" />
+          <FloatingOrb size={200} x="40%" y="50%" delay={4} duration={7} color="rgba(249,115,22,0.04)" />
 
-          <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
-            {/* Hero SVG illustration */}
-            <div style={{ display: "flex", justifyContent: "center", marginBottom: 32 }}>
-              <svg width="120" height="120" viewBox="0 0 120 120" fill="none">
-                <rect x="10" y="10" width="100" height="80" rx="12" stroke="#E7E5E4" strokeWidth="3" fill="white"/>
-                <rect x="30" y="30" width="60" height="40" rx="6" fill="#FFF0E6"/>
-                <rect x="40" y="40" width="40" height="6" rx="3" fill="#F97316" opacity="0.4"/>
-                <rect x="40" y="52" width="28" height="6" rx="3" fill="#F97316" opacity="0.25"/>
-                <circle cx="80" cy="80" r="28" fill="white" stroke="#E7E5E4" strokeWidth="2"/>
-                <rect x="66" y="76" width="28" height="20" rx="4" fill="#F97316"/>
-                <path d="M70 76v-5a10 10 0 0 1 20 0v5" stroke="#F97316" strokeWidth="2.5" strokeLinecap="round"/>
-                <circle cx="80" cy="85" r="2.5" fill="white"/>
-              </svg>
-            </div>
+          {/* Badge */}
+          <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}
+            style={{ display: "inline-flex", alignItems: "center", gap: 8, background: "#FFF0E6", border: "1.5px solid #FED7AA", borderRadius: 20, padding: "6px 16px", fontSize: 12, fontWeight: 700, color: "#F97316", letterSpacing: "0.04em", textTransform: "uppercase", marginBottom: 28 }}
+          >
+            <div className="pulse-dot-orange" style={{ width: 6, height: 6 }}/> Live on Ethereum Sepolia
+          </motion.div>
 
-            <h1 style={{ fontSize: "clamp(36px, 6vw, 56px)", fontWeight: 800, color: "#1C1917", lineHeight: 1.1, marginBottom: 20 }}>
-              Secure{" "}
-              <span style={{
-                background: "linear-gradient(135deg, #F97316, #EA6C0A)",
-                WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent"
-              }}>
-                Hidden
-              </span>{" "}
-              Communication
-            </h1>
+          {/* Heading */}
+          <motion.h1 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.1 }}
+            style={{ fontSize: "clamp(38px,7vw,66px)", fontWeight: 900, color: "#1C1917", lineHeight: 1.08, marginBottom: 24, letterSpacing: "-0.03em", position: "relative", zIndex: 1 }}
+          >
+            Secret Messages,{" "}
+            <span style={{ background: "linear-gradient(135deg,#F97316 0%,#F59E0B 50%,#EA6C0A 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text" }}>
+              Hidden in Plain Sight
+            </span>
+          </motion.h1>
 
-            <p style={{ fontSize: 18, color: "#78716C", maxWidth: 580, margin: "0 auto 36px", lineHeight: 1.7 }}>
-              StegoChain embeds encrypted secret messages inside ordinary images and audio files,
-              then anchors proof of delivery on the Ethereum Sepolia blockchain — invisible to everyone except the intended receiver.
-            </p>
+          {/* Subtitle */}
+          <motion.p initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}
+            style={{ fontSize: 18, color: "#78716C", maxWidth: 600, margin: "0 auto 44px", lineHeight: 1.75, position: "relative", zIndex: 1 }}
+          >
+            StegoChain embeds encrypted messages inside ordinary images and audio files, then anchors cryptographic proof on the Ethereum blockchain — <strong style={{ color: "#1C1917" }}>invisible to everyone</strong> except the intended receiver.
+          </motion.p>
 
-            <div style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap" }}>
-              <Link href="/send">
-                <button className="btn-primary" style={{ padding: "14px 32px", fontSize: 16 }}>
-                  📤 Send a Message
-                </button>
-              </Link>
-              <Link href="/receive">
-                <button className="btn-secondary" style={{ padding: "14px 32px", fontSize: 16 }}>
-                  📥 Retrieve Message
-                </button>
-              </Link>
+          {/* CTA buttons */}
+          <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.3 }}
+            style={{ display: "flex", gap: 14, justifyContent: "center", flexWrap: "wrap", position: "relative", zIndex: 1 }}
+          >
+            <Link href="/send" style={{ textDecoration: "none" }}>
+              <motion.button whileHover={{ scale: 1.04, boxShadow: "0 12px 32px rgba(249,115,22,0.3)" }} whileTap={{ scale: 0.97 }}
+                className="btn-primary" style={{ padding: "15px 36px", fontSize: 16, borderRadius: 12 }}
+              >
+                📤 Send a Message
+              </motion.button>
+            </Link>
+            <Link href="/receive" style={{ textDecoration: "none" }}>
+              <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.97 }}
+                className="btn-secondary" style={{ padding: "15px 36px", fontSize: 16, borderRadius: 12 }}
+              >
+                📥 Retrieve Message
+              </motion.button>
+            </Link>
+          </motion.div>
+
+          {/* Hero visual */}
+          <motion.div initial={{ opacity: 0, y: 30, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} transition={{ duration: 0.8, delay: 0.4, ease: "easeOut" }}
+            style={{ marginTop: 60, position: "relative", zIndex: 1 }}
+          >
+            <div style={{ background: "white", borderRadius: 20, border: "1.5px solid #E7E5E4", padding: 24, maxWidth: 540, margin: "0 auto", boxShadow: "0 20px 60px rgba(0,0,0,0.08)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+                {["#FF5F57","#FEBC2E","#28C840"].map((c,i) => <div key={i} style={{ width:12,height:12,borderRadius:"50%",background:c }}/>)}
+                <div style={{ flex:1, background:"#F8F7F5", borderRadius:6, padding:"4px 12px", fontSize:11, color:"#78716C", fontFamily:"monospace" }}>stegochain.app/send</div>
+              </div>
+              {/* Mini pipeline visualization */}
+              <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+                {["📁 Upload","🔒 Encrypt","📡 IPFS","⛓ Chain","🔑 Key Frags"].map((step, i, arr) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", flex: 1 }}>
+                    <motion.div
+                      initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.6 + i * 0.12 }}
+                      style={{ flex: 1, textAlign: "center", padding: "8px 4px", background: i === 2 ? "#FFF0E6" : "#F8F7F5", borderRadius: 8, fontSize: 10, fontWeight: 600, color: i === 2 ? "#F97316" : "#78716C", border: i === 2 ? "1.5px solid #FED7AA" : "1px solid transparent", whiteSpace: "nowrap" }}
+                    >
+                      {step}
+                    </motion.div>
+                    {i < arr.length - 1 && (
+                      <motion.div initial={{ scaleX: 0 }} animate={{ scaleX: 1 }} transition={{ delay: 0.7 + i * 0.12 }}
+                        style={{ width: 16, height: 2, background: "linear-gradient(to right,#FED7AA,#F97316)", flexShrink: 0, transformOrigin: "left" }}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 8 }}>
+                <div style={{ flex: 1, height: 6, background: "#F0FDF4", borderRadius: 3, overflow: "hidden" }}>
+                  <motion.div
+                    initial={{ width: "0%" }} animate={{ width: "67%" }} transition={{ delay: 1, duration: 1.5, ease: "easeInOut" }}
+                    style={{ height: "100%", background: "linear-gradient(90deg,#16A34A,#22C55E)", borderRadius: 3 }}
+                  />
+                </div>
+                <span style={{ fontSize: 11, color: "#16A34A", fontWeight: 700 }}>67%</span>
+                <span style={{ fontSize: 11, color: "#78716C" }}>Encrypting…</span>
+              </div>
             </div>
           </motion.div>
         </section>
 
-        {/* Stats Bar */}
-        <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 60px" }}>
+        {/* ── Stats Bar ─────────────────────────────────────── */}
+        <section style={{ maxWidth: 900, margin: "0 auto", padding: "0 24px 70px" }}>
           <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-            <StatCard label="Messages on Chain" value={stats?.total_records ?? null}/>
-            <StatCard label="Network Nodes" value={graph?.total_nodes ?? null}/>
-            <StatCard label="Contract on Ethereum Sepolia" value="StegoChainV2" link={CONTRACT ? `${BASESCAN}/address/${CONTRACT}` : null}/>
+            <StatCard label="Messages on Chain" value={stats?.total_records ?? null} icon="⛓" delay={0} />
+            <StatCard label="Network Nodes" value={graph?.total_nodes ?? null} icon="◈" delay={0.1} />
+            <StatCard label="Ethereum Sepolia" value="StegoChainV2" icon="⬡" link={CONTRACT ? `${BASESCAN}/address/${CONTRACT}` : null} delay={0.2} />
           </div>
         </section>
 
-        {/* Feature Cards */}
-        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px 70px" }}>
-          <h2 style={{ textAlign: "center", fontSize: 28, fontWeight: 700, marginBottom: 36, color: "#1C1917" }}>Three layers of protection</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))", gap: 20 }}>
+        {/* ── Features ──────────────────────────────────────── */}
+        <section style={{ maxWidth: 1100, margin: "0 auto", padding: "0 24px 80px" }}>
+          <div style={{ textAlign: "center", marginBottom: 48 }}>
+            <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+              style={{ fontSize: 11, fontWeight: 700, color: "#F97316", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}
+            >Seven Layers of Protection</motion.div>
+            <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+              style={{ fontSize: "clamp(24px,4vw,38px)", fontWeight: 800, color: "#1C1917", letterSpacing: "-0.02em" }}
+            >
+              Security you can <span className="gradient-text">verify on-chain</span>
+            </motion.h2>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(300px,1fr))", gap: 20 }}>
             {[
-              {
-                icon: "👁‍🗨",
-                title: "Steganography",
-                sub: "Hide in plain sight",
-                desc: "Your message is embedded directly into pixel data (LSB for images) or echo delays (audio) — the media file looks and sounds completely normal."
-              },
-              {
-                icon: "⛓",
-                title: "Blockchain Verified",
-                sub: "Tamper-proof ledger",
-                desc: "A Merkle root of your encrypted key fragments is registered on Ethereum Sepolia. Any tampering breaks the Merkle proof and is instantly detected."
-              },
-              {
-                icon: "🔑",
-                title: "Threshold Encryption",
-                sub: "Fragmented key access",
-                desc: "Your AES key is split into fragments stored on IPFS. Only the receiver can reconstruct the key by proving ownership on-chain with a MetaMask signature."
-              }
-            ].map((card, i) => (
-              <motion.div
-                key={i}
-                className="card"
-                whileHover={{ y: -4, boxShadow: "0 8px 24px rgba(0,0,0,0.08)" }}
-                style={{ padding: 28, transition: "all 0.2s" }}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.1 + 0.3 }}
-              >
-                <div style={{ fontSize: 36, marginBottom: 14 }}>{card.icon}</div>
-                <h3 style={{ fontSize: 18, fontWeight: 700, color: "#1C1917", marginBottom: 4 }}>{card.title}</h3>
-                <div style={{ fontSize: 13, color: "#F97316", fontWeight: 500, marginBottom: 10 }}>{card.sub}</div>
-                <p style={{ fontSize: 14, color: "#78716C", lineHeight: 1.65, margin: 0 }}>{card.desc}</p>
-              </motion.div>
-            ))}
+              { icon: "👁", title: "Steganographic Hiding", sub: "LSB + Echo Hiding", desc: "Your message is embedded inside pixel data (LSB for images) or echo delays (audio). The file looks and sounds completely normal to any observer.", delay: 0 },
+              { icon: "🔒", title: "AES-256-GCM Encryption", sub: "Military-grade cipher", desc: "Before hiding, your message is encrypted with AES-256-GCM — the same cipher used by governments and banks. 2²⁵⁶ possible keys. Brute force is impossible.", delay: 0.1 },
+              { icon: "🔑", title: "ECC Key Exchange", sub: "P-256 ECDH + ECDSA", desc: "Your AES key is derived via Elliptic Curve Diffie-Hellman. Keys are never transmitted — both parties derive the same secret independently.", delay: 0.2 },
+              { icon: "⛓", title: "Blockchain Verified", sub: "Ethereum Sepolia • Immutable", desc: "A Merkle root of encrypted key fragments is permanently registered on-chain. The smart contract is the judge — no admin can override it.", delay: 0.3 },
+              { icon: "📡", title: "IPFS Decentralised Storage", sub: "Content-addressed • Pinata", desc: "Files live on IPFS identified by cryptographic CIDs. Any tampering changes the hash instantly. No central server can delete or alter your files.", delay: 0.4 },
+              { icon: "🧠", title: "Graph AI Monitoring", sub: "PyTorch Geometric GAE", desc: "A Graph Autoencoder continuously analyses communication patterns. Anomalous nodes — spam, data exfiltration, compromised devices — are flagged automatically.", delay: 0.5 },
+            ].map((f, i) => <FeatureCard key={i} {...f} />)}
           </div>
         </section>
 
-        {/* How It Works */}
-        <section style={{ background: "white", padding: "60px 24px" }}>
-          <div style={{ maxWidth: 900, margin: "0 auto" }}>
-            <h2 style={{ textAlign: "center", fontSize: 28, fontWeight: 700, marginBottom: 48, color: "#1C1917" }}>How it works</h2>
-            <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", flexWrap: "wrap", gap: 0 }}>
-              {[
-                { n: 1, icon: "📁", label: "Upload", desc: "Upload a cover image or audio file" },
-                { n: 2, icon: "🔒", label: "Hide", desc: "Message is hidden using steganography" },
-                { n: 3, icon: "⛓", label: "Anchor", desc: "Encrypted & stored on IPFS with blockchain proof" },
-                { n: 4, icon: "🔓", label: "Decrypt", desc: "Receiver proves identity on-chain to decrypt" },
-              ].map((step, i, arr) => (
-                <div key={i} style={{ display: "flex", alignItems: "center" }}>
-                  <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10, maxWidth: 140, textAlign: "center" }}>
-                    <div style={{
-                      width: 56, height: 56, borderRadius: "50%",
-                      background: "#FFF0E6", display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 24, border: "2px solid #FED7AA"
-                    }}>
-                      {step.icon}
-                    </div>
-                    <div style={{ fontWeight: 700, fontSize: 14, color: "#1C1917" }}>
-                      <span style={{ color: "#F97316" }}>{step.n}. </span>{step.label}
-                    </div>
-                    <div style={{ fontSize: 12, color: "#78716C", lineHeight: 1.5 }}>{step.desc}</div>
+        {/* ── How It Works ──────────────────────────────────── */}
+        <section style={{ background: "white", padding: "80px 24px", borderTop: "1px solid #F0EDE9", borderBottom: "1px solid #F0EDE9" }}>
+          <div style={{ maxWidth: 1000, margin: "0 auto" }}>
+            <div style={{ textAlign: "center", marginBottom: 56 }}>
+              <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+                style={{ fontSize: 11, fontWeight: 700, color: "#F97316", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 12 }}
+              >The Complete Pipeline</motion.div>
+              <motion.h2 initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+                style={{ fontSize: "clamp(24px,4vw,38px)", fontWeight: 800, color: "#1C1917", letterSpacing: "-0.02em" }}
+              >How it works</motion.h2>
+            </div>
+
+            {/* Send pipeline */}
+            <div style={{ marginBottom: 48 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#78716C", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 24, textAlign: "center" }}>📤 Send Flow</div>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", flexWrap: "wrap", gap: 12 }}>
+                {[
+                  { n:1, icon:"📁", label:"Upload", desc:"Cover image or audio file" },
+                  { n:2, icon:"🗝", label:"Embed", desc:"LSB / Echo hiding" },
+                  { n:3, icon:"🔒", label:"Encrypt", desc:"AES-256-GCM" },
+                  { n:4, icon:"📡", label:"IPFS", desc:"Upload encrypted file" },
+                  { n:5, icon:"🧩", label:"Fragment", desc:"Split AES key → ECC encrypt" },
+                  { n:6, icon:"⛓", label:"Chain", desc:"Register Merkle root on-chain" },
+                ].map((s, i, arr) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center" }}>
+                    <PipeStep {...s} delay={i * 0.08} />
+                    {i < arr.length - 1 && (
+                      <motion.div initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.08 + 0.2 }}
+                        style={{ width: 32, height: 2, background: "linear-gradient(to right,#F97316,#FED7AA)", margin: "0 4px", flexShrink: 0, marginBottom: 40, transformOrigin: "left" }}
+                      />
+                    )}
                   </div>
-                  {i < arr.length - 1 && (
-                    <div style={{ width: 48, height: 2, background: "linear-gradient(to right, #F97316, #FED7AA)", margin: "0 8px", flexShrink: 0 }}/>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
+            </div>
+
+            {/* Receive pipeline */}
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#78716C", textTransform: "uppercase", letterSpacing: "0.06em", marginBottom: 24, textAlign: "center" }}>📥 Receive Flow</div>
+              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", flexWrap: "wrap", gap: 12 }}>
+                {[
+                  { n:1, icon:"🔍", label:"Lookup", desc:"Session ID → blockchain record" },
+                  { n:2, icon:"🦊", label:"Sign", desc:"MetaMask identity proof" },
+                  { n:3, icon:"✅", label:"Verify", desc:"On-chain Merkle proof + ecrecover" },
+                  { n:4, icon:"🗝", label:"Reconstruct", desc:"ECDH → AES key" },
+                  { n:5, icon:"🔓", label:"Decrypt", desc:"AES-GCM + steganography extract" },
+                  { n:6, icon:"💬", label:"Reveal", desc:"Hidden message appears" },
+                ].map((s, i, arr) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center" }}>
+                    <PipeStep {...s} delay={i * 0.08 + 0.3} />
+                    {i < arr.length - 1 && (
+                      <motion.div initial={{ scaleX: 0 }} whileInView={{ scaleX: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.08 + 0.5 }}
+                        style={{ width: 32, height: 2, background: "linear-gradient(to right,#16A34A,#BBF7D0)", margin: "0 4px", flexShrink: 0, marginBottom: 40, transformOrigin: "left" }}
+                      />
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* Footer */}
-        <footer style={{ borderTop: "1px solid #E7E5E4", padding: "30px 24px", textAlign: "center" }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 10 }}>
-            <svg width="20" height="20" viewBox="0 0 28 28" fill="none">
-              <path d="M14 2L4 7v7c0 6.2 4.3 12 10 13.4C20 26 24.4 20.2 24.4 14V7L14 2z" fill="#F97316" opacity="0.15"/>
-              <path d="M14 2L4 7v7c0 6.2 4.3 12 10 13.4C20 26 24.4 20.2 24.4 14V7L14 2z" stroke="#F97316" strokeWidth="1.5" fill="none"/>
-            </svg>
-            <span style={{ fontWeight: 700, color: "#1C1917" }}>StegoChain</span>
-          </div>
-          <div style={{ fontSize: 12, color: "#78716C", marginBottom: 8 }}>Final Year Project — Blockchain + Steganography + AI</div>
-          {CONTRACT && (
-            <a href={`${BASESCAN}/address/${CONTRACT}`} target="_blank" rel="noopener noreferrer"
-              style={{ fontSize: 12, color: "#F97316", textDecoration: "none" }}>
-              View Contract on Etherscan →
-            </a>
-          )}
-        </footer>
+        {/* ── Tech Stack ────────────────────────────────────── */}
+        <section style={{ maxWidth: 900, margin: "0 auto", padding: "70px 24px" }}>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }}
+            style={{ textAlign: "center", marginBottom: 32 }}
+          >
+            <div style={{ fontSize: 11, fontWeight: 700, color: "#F97316", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>Built With</div>
+            <h2 style={{ fontSize: 26, fontWeight: 800, color: "#1C1917", letterSpacing: "-0.02em" }}>Production-grade stack</h2>
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            style={{ display: "flex", flexWrap: "wrap", gap: 10, justifyContent: "center" }}
+          >
+            {TECH_STACK.map((t, i) => (
+              <motion.div key={i} initial={{ opacity: 0, scale: 0.9 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true }} transition={{ delay: i * 0.05 }}>
+                <TechBadge label={t} />
+              </motion.div>
+            ))}
+          </motion.div>
+        </section>
 
-        <style>{`
-          @keyframes float0 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
-          @keyframes float1 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-18px)} }
-          @keyframes float2 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-          @keyframes float3 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
-          @keyframes float4 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-8px)} }
-          @keyframes float5 { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
-        `}</style>
+        {/* ── CTA Banner ────────────────────────────────────── */}
+        <section style={{ padding: "0 24px 80px" }}>
+          <motion.div initial={{ opacity: 0, y: 24 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
+            style={{ maxWidth: 700, margin: "0 auto", background: "linear-gradient(135deg,#1C1917 0%,#292524 100%)", borderRadius: 24, padding: "48px 40px", textAlign: "center", position: "relative", overflow: "hidden" }}
+          >
+            <div style={{ position: "absolute", top: -40, right: -40, width: 200, height: 200, borderRadius: "50%", background: "rgba(249,115,22,0.1)", filter: "blur(60px)" }}/>
+            <div style={{ position: "absolute", bottom: -40, left: -40, width: 150, height: 150, borderRadius: "50%", background: "rgba(245,158,11,0.08)", filter: "blur(50px)" }}/>
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <div style={{ fontSize: 40, marginBottom: 16 }}>🛡️</div>
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: "white", marginBottom: 12, letterSpacing: "-0.02em" }}>Ready to send your first hidden message?</h2>
+              <p style={{ fontSize: 15, color: "#A8A29E", marginBottom: 28, lineHeight: 1.7 }}>Connect your MetaMask wallet and experience blockchain-verified steganographic communication.</p>
+              <div style={{ display: "flex", gap: 12, justifyContent: "center", flexWrap: "wrap" }}>
+                <Link href="/send" style={{ textDecoration: "none" }}>
+                  <motion.button whileHover={{ scale: 1.05, boxShadow: "0 12px 32px rgba(249,115,22,0.4)" }} whileTap={{ scale: 0.97 }}
+                    className="btn-primary" style={{ padding: "13px 32px", fontSize: 15, borderRadius: 12 }}
+                  >📤 Send a Message</motion.button>
+                </Link>
+                <Link href="/register" style={{ textDecoration: "none" }}>
+                  <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
+                    style={{ padding: "13px 32px", fontSize: 15, background: "rgba(255,255,255,0.1)", color: "white", border: "1.5px solid rgba(255,255,255,0.2)", borderRadius: 12, cursor: "pointer", fontWeight: 600, transition: "all 0.2s" }}
+                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.18)"}
+                    onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
+                  >Create Account</motion.button>
+                </Link>
+              </div>
+            </div>
+          </motion.div>
+        </section>
+
+        {/* ── Footer ────────────────────────────────────────── */}
+        <footer style={{ borderTop: "1px solid #E7E5E4", padding: "36px 24px" }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 16 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <svg width="22" height="22" viewBox="0 0 28 28" fill="none">
+                <path d="M14 2L4 7v7c0 6.2 4.3 12 10 13.4C20 26 24.4 20.2 24.4 14V7L14 2z" fill="#F97316" opacity="0.15"/>
+                <path d="M14 2L4 7v7c0 6.2 4.3 12 10 13.4C20 26 24.4 20.2 24.4 14V7L14 2z" stroke="#F97316" strokeWidth="1.5"/>
+                <path d="M9 14l3.5 3.5L19 11" stroke="#F97316" strokeWidth="2" strokeLinecap="round"/>
+              </svg>
+              <span style={{ fontWeight: 800, fontSize: 15, color: "#1C1917" }}>Stego<span style={{ color: "#F97316" }}>Chain</span></span>
+              <span style={{ fontSize: 12, color: "#A8A29E", marginLeft: 8 }}>Final Year Project · Blockchain + Steganography + AI</span>
+            </div>
+            <div style={{ display: "flex", gap: 20, alignItems: "center" }}>
+              {CONTRACT && (
+                <a href={`${BASESCAN}/address/${CONTRACT}`} target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: 12, color: "#F97316", textDecoration: "none", fontWeight: 600 }}>
+                  Contract ↗
+                </a>
+              )}
+              <Link href="/ledger" style={{ fontSize: 12, color: "#78716C", textDecoration: "none" }}>Ledger</Link>
+              <Link href="/anomaly" style={{ fontSize: 12, color: "#78716C", textDecoration: "none" }}>Anomaly AI</Link>
+            </div>
+          </div>
+        </footer>
       </main>
     </>
   );

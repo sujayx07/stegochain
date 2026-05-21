@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import { useAuth } from "../context/AuthContext";
@@ -8,13 +8,38 @@ import { checkHealth } from "../utils/api";
 import { motion, AnimatePresence } from "framer-motion";
 
 const NAV_LINKS = [
-  { href: "/", label: "Home" },
-  { href: "/send", label: "Send" },
-  { href: "/receive", label: "Receive" },
-  { href: "/dashboard", label: "Dashboard" },
-  { href: "/ledger", label: "Ledger" },
-  { href: "/anomaly", label: "Anomaly" },
+  { href: "/",         label: "Home",      icon: "⬡" },
+  { href: "/send",     label: "Send",      icon: "↑" },
+  { href: "/receive",  label: "Receive",   icon: "↓" },
+  { href: "/dashboard",label: "Dashboard", icon: "⊞" },
+  { href: "/ledger",   label: "Ledger",    icon: "≡" },
+  { href: "/anomaly",  label: "Anomaly",   icon: "◈" },
 ];
+
+function Logo() {
+  return (
+    <Link href="/" style={{ display: "flex", alignItems: "center", gap: 10, textDecoration: "none", flexShrink: 0 }}>
+      <div style={{ position: "relative", width: 32, height: 32 }}>
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <path d="M16 2L5 8v8c0 7.1 4.9 13.7 11 15.4 6.1-1.7 11-8.3 11-15.4V8L16 2z"
+            fill="url(#navGrad)" opacity="0.15"/>
+          <path d="M16 2L5 8v8c0 7.1 4.9 13.7 11 15.4 6.1-1.7 11-8.3 11-15.4V8L16 2z"
+            stroke="#F97316" strokeWidth="1.8" fill="none"/>
+          <path d="M11 16l3.5 3.5L21 12" stroke="#F97316" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+          <defs>
+            <linearGradient id="navGrad" x1="5" y1="2" x2="27" y2="32">
+              <stop stopColor="#F97316"/>
+              <stop offset="1" stopColor="#F59E0B"/>
+            </linearGradient>
+          </defs>
+        </svg>
+      </div>
+      <span style={{ fontWeight: 800, fontSize: 19, color: "#1C1917", letterSpacing: "-0.02em" }}>
+        Stego<span style={{ color: "#F97316" }}>Chain</span>
+      </span>
+    </Link>
+  );
+}
 
 export default function Navbar() {
   const router = useRouter();
@@ -22,121 +47,120 @@ export default function Navbar() {
   const { address, connect, connecting, isConnected, isCorrectChain, switchToSepolia } = useWallet();
   const [backendOnline, setBackendOnline] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 10);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   useEffect(() => {
     let mounted = true;
     async function ping() {
-      try {
-        await checkHealth();
-        if (mounted) setBackendOnline(true);
-      } catch {
-        if (mounted) setBackendOnline(false);
-      }
+      try { await checkHealth(); if (mounted) setBackendOnline(true); }
+      catch { if (mounted) setBackendOnline(false); }
     }
     ping();
-    const interval = setInterval(ping, 30000);
-    return () => { mounted = false; clearInterval(interval); };
+    const iv = setInterval(ping, 30000);
+    return () => { mounted = false; clearInterval(iv); };
   }, []);
 
-  function isActive(href) {
-    return router.pathname === href;
-  }
+  useEffect(() => { setMobileOpen(false); }, [router.pathname]);
+
+  const isActive = (href) => router.pathname === href;
 
   return (
     <>
       <motion.nav
-        initial={{ opacity: 0, y: -8 }}
+        initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
         style={{
-          background: "white",
-          borderBottom: "1px solid #E7E5E4",
-          position: "sticky",
-          top: 0,
-          zIndex: 100,
-          boxShadow: "0 1px 3px rgba(0,0,0,0.04)"
+          background: scrolled ? "rgba(255,255,255,0.95)" : "rgba(255,255,255,0.98)",
+          backdropFilter: "blur(20px)",
+          WebkitBackdropFilter: "blur(20px)",
+          borderBottom: `1px solid ${scrolled ? "#E7E5E4" : "#F0EDE9"}`,
+          position: "sticky", top: 0, zIndex: 200,
+          boxShadow: scrolled ? "0 4px 20px rgba(0,0,0,0.06)" : "none",
+          transition: "all 0.3s ease",
         }}
       >
-        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", height: 64 }}>
-          {/* Logo */}
-          <Link href="/" style={{ display: "flex", alignItems: "center", gap: 8, textDecoration: "none", marginRight: 40 }}>
-            <svg width="28" height="28" viewBox="0 0 28 28" fill="none">
-              <path d="M14 2L4 7v7c0 6.2 4.3 12 10 13.4C20 26 24.4 20.2 24.4 14V7L14 2z" fill="#F97316" opacity="0.15"/>
-              <path d="M14 2L4 7v7c0 6.2 4.3 12 10 13.4C20 26 24.4 20.2 24.4 14V7L14 2z" stroke="#F97316" strokeWidth="1.5" fill="none"/>
-              <path d="M9 14l3.5 3.5L19 11" stroke="#F97316" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-            <span style={{ fontWeight: 700, fontSize: 18, color: "#1C1917" }}>Stego<span style={{ color: "#F97316" }}>Chain</span></span>
-          </Link>
+        <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px", display: "flex", alignItems: "center", height: 64, gap: 8 }}>
+          <Logo />
 
-          {/* Desktop Nav Links */}
-          <div style={{ display: "flex", alignItems: "center", gap: 4, flex: 1 }} className="hidden-mobile">
+          {/* Desktop Nav */}
+          <div style={{ display: "flex", alignItems: "center", gap: 2, flex: 1, marginLeft: 32 }} className="hidden-mobile">
             {NAV_LINKS.map(link => (
-              <Link key={link.href} href={link.href} style={{
-                padding: "6px 12px",
-                borderRadius: 8,
-                fontSize: 14,
-                fontWeight: isActive(link.href) ? 600 : 500,
-                color: isActive(link.href) ? "#F97316" : "#78716C",
-                textDecoration: "none",
-                borderBottom: isActive(link.href) ? "2px solid #F97316" : "2px solid transparent",
-                transition: "all 0.15s ease"
-              }}>
-                {link.label}
+              <Link key={link.href} href={link.href} style={{ textDecoration: "none" }}>
+                <div style={{
+                  padding: "6px 14px", borderRadius: 8, fontSize: 14,
+                  fontWeight: isActive(link.href) ? 700 : 500,
+                  color: isActive(link.href) ? "#F97316" : "#78716C",
+                  background: isActive(link.href) ? "#FFF0E6" : "transparent",
+                  transition: "all 0.18s ease",
+                  position: "relative",
+                  cursor: "pointer",
+                }}
+                  onMouseEnter={e => { if (!isActive(link.href)) { e.currentTarget.style.background = "#F8F7F5"; e.currentTarget.style.color = "#1C1917"; }}}
+                  onMouseLeave={e => { if (!isActive(link.href)) { e.currentTarget.style.background = "transparent"; e.currentTarget.style.color = "#78716C"; }}}
+                >
+                  {link.label}
+                  {isActive(link.href) && (
+                    <motion.div
+                      layoutId="navUnderline"
+                      style={{ position: "absolute", bottom: -2, left: 14, right: 14, height: 2, background: "#F97316", borderRadius: 2 }}
+                    />
+                  )}
+                </div>
               </Link>
             ))}
           </div>
 
           {/* Right side */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            {/* Backend status */}
-            <div style={{ display: "flex", alignItems: "center", gap: 5 }} title={backendOnline ? "Backend online" : "Backend offline"}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginLeft: "auto" }}>
+            {/* API status */}
+            <div title={backendOnline ? "Backend online" : backendOnline === false ? "Backend offline" : "Checking..."} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 10px", borderRadius: 8, background: "#F8F7F5", border: "1px solid #E7E5E4", cursor: "default" }} className="hidden-mobile">
               <div style={{
-                width: 8, height: 8, borderRadius: "50%",
+                width: 7, height: 7, borderRadius: "50%",
                 background: backendOnline === null ? "#D1D5DB" : backendOnline ? "#16A34A" : "#DC2626",
-                boxShadow: backendOnline ? "0 0 0 2px rgba(22,163,74,0.2)" : "none"
+                animation: backendOnline ? "pulse-ring 2s infinite" : "none",
               }}/>
-              <span style={{ fontSize: 12, color: "#78716C" }}>API</span>
+              <span style={{ fontSize: 11, fontWeight: 600, color: "#78716C", letterSpacing: "0.04em" }}>API</span>
             </div>
 
             {/* Wallet */}
             {!isConnected ? (
-              <button
-                onClick={connect}
-                disabled={connecting}
-                className="btn-primary"
-                style={{ padding: "7px 14px", fontSize: 13 }}
-              >
-                {connecting ? "Connecting…" : "Connect Wallet"}
+              <button onClick={connect} disabled={connecting} className="btn-primary" style={{ padding: "7px 16px", fontSize: 13 }}>
+                {connecting ? (
+                  <><div className="spinner spinner-sm" style={{ width: 14, height: 14, borderWidth: 2, borderTopColor: "white" }}/> Connecting…</>
+                ) : "🦊 Connect"}
               </button>
             ) : (
               <div style={{
-                display: "flex", alignItems: "center", gap: 6,
-                background: "#F8F7F5", border: "1px solid #E7E5E4",
-                borderRadius: 10, padding: "5px 12px"
+                display: "flex", alignItems: "center", gap: 8,
+                background: "#F0FDF4", border: "1.5px solid #BBF7D0",
+                borderRadius: 10, padding: "6px 12px",
+                transition: "all 0.2s",
               }}>
-                <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#16A34A" }}/>
-                <span className="mono" style={{ fontSize: 12, color: "#1C1917" }}>{truncateAddress(address)}</span>
-                {user && <span style={{ fontSize: 12, color: "#78716C", marginLeft: 4 }}>· {user.username}</span>}
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#16A34A", animation: "pulse-ring 2s infinite" }}/>
+                <span className="mono" style={{ fontSize: 12, color: "#1C1917", fontWeight: 600 }}>{truncateAddress(address)}</span>
+                {user && <span style={{ fontSize: 11, color: "#78716C", borderLeft: "1px solid #BBF7D0", paddingLeft: 8 }}>{user.username}</span>}
               </div>
             )}
 
-            {/* Auth buttons */}
             {isAuthenticated ? (
               <button onClick={logout} className="btn-secondary" style={{ padding: "7px 14px", fontSize: 13 }}>Logout</button>
             ) : (
-              <Link href="/login">
+              <Link href="/login" style={{ textDecoration: "none" }}>
                 <button className="btn-secondary" style={{ padding: "7px 14px", fontSize: 13 }}>Login</button>
               </Link>
             )}
 
             {/* Hamburger */}
-            <button
-              onClick={() => setMobileOpen(o => !o)}
-              style={{ background: "none", border: "none", cursor: "pointer", padding: 4 }}
-              className="show-mobile"
-            >
-              <svg width="22" height="22" fill="none" viewBox="0 0 22 22">
-                <path d="M3 6h16M3 11h16M3 16h16" stroke="#1C1917" strokeWidth="1.8" strokeLinecap="round"/>
+            <button onClick={() => setMobileOpen(o => !o)} className="btn-icon show-mobile" style={{ padding: 8 }}>
+              <svg width="20" height="20" fill="none" viewBox="0 0 20 20">
+                <motion.path animate={{ d: mobileOpen ? "M4 4L16 16M16 4L4 16" : "M3 5h14M3 10h14M3 15h14" }} transition={{ duration: 0.2 }} stroke="#1C1917" strokeWidth="1.8" strokeLinecap="round"/>
               </svg>
             </button>
           </div>
@@ -149,17 +173,22 @@ export default function Navbar() {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
               style={{ borderTop: "1px solid #E7E5E4", background: "white", overflow: "hidden" }}
             >
-              <div style={{ padding: "12px 24px", display: "flex", flexDirection: "column", gap: 4 }}>
+              <div style={{ padding: "12px 16px 20px", display: "flex", flexDirection: "column", gap: 4 }}>
                 {NAV_LINKS.map(link => (
-                  <Link key={link.href} href={link.href} onClick={() => setMobileOpen(false)} style={{
-                    padding: "10px 12px", borderRadius: 8, fontSize: 14,
-                    fontWeight: isActive(link.href) ? 600 : 500,
-                    color: isActive(link.href) ? "#F97316" : "#1C1917",
-                    textDecoration: "none"
-                  }}>
-                    {link.label}
+                  <Link key={link.href} href={link.href} style={{ textDecoration: "none" }}>
+                    <div style={{
+                      padding: "12px 16px", borderRadius: 10, fontSize: 15,
+                      fontWeight: isActive(link.href) ? 700 : 500,
+                      color: isActive(link.href) ? "#F97316" : "#1C1917",
+                      background: isActive(link.href) ? "#FFF0E6" : "transparent",
+                      display: "flex", alignItems: "center", gap: 10,
+                    }}>
+                      <span style={{ fontSize: 16 }}>{link.icon}</span>
+                      {link.label}
+                    </div>
                   </Link>
                 ))}
               </div>
@@ -168,33 +197,25 @@ export default function Navbar() {
         </AnimatePresence>
       </motion.nav>
 
-      {/* Wrong chain warning */}
-      {isConnected && !isCorrectChain && (
-        <div style={{
-          background: "#FEF3C7", borderBottom: "1px solid #FDE68A",
-          padding: "10px 24px", display: "flex", alignItems: "center",
-          justifyContent: "center", gap: 12
-        }}>
-          <span style={{ fontSize: 13, color: "#92400E" }}>⚠️ You are on the wrong network. Switch to Ethereum Sepolia to use StegoChain.</span>
-          <button onClick={switchToSepolia} style={{
-            background: "#D97706", color: "white", border: "none",
-            borderRadius: 8, padding: "5px 14px", fontSize: 13,
-            fontWeight: 500, cursor: "pointer"
-          }}>
-            Switch Network
-          </button>
-        </div>
-      )}
-
-      <style>{`
-        @media (max-width: 768px) {
-          .hidden-mobile { display: none !important; }
-          .show-mobile { display: block !important; }
-        }
-        @media (min-width: 769px) {
-          .show-mobile { display: none !important; }
-        }
-      `}</style>
+      {/* Wrong chain banner */}
+      <AnimatePresence>
+        {isConnected && !isCorrectChain && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            style={{ background: "linear-gradient(135deg, #FEF3C7, #FDE68A)", borderBottom: "1px solid #FCD34D", padding: "10px 24px", display: "flex", alignItems: "center", justifyContent: "center", gap: 14 }}
+          >
+            <span style={{ fontSize: 13, color: "#92400E", fontWeight: 500 }}>⚠️ Wrong network — switch to <strong>Ethereum Sepolia</strong> to use StegoChain</span>
+            <button onClick={switchToSepolia} style={{ background: "#D97706", color: "white", border: "none", borderRadius: 8, padding: "5px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", transition: "all 0.2s" }}
+              onMouseEnter={e => e.currentTarget.style.background = "#B45309"}
+              onMouseLeave={e => e.currentTarget.style.background = "#D97706"}
+            >
+              Switch Network
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }
