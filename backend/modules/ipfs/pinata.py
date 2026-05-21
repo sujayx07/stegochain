@@ -142,7 +142,7 @@ def upload_bytes_to_ipfs(
 
 def retrieve_from_ipfs(cid: str, output_path: str = None) -> bytes:
     """
-    Retrieve a file from IPFS via the Pinata gateway.
+    Retrieve a file from IPFS via the Pinata gateway with streaming for large files.
     """
     urls = [
         f"{_GATEWAY_URL}/{cid}",
@@ -153,13 +153,21 @@ def retrieve_from_ipfs(cid: str, output_path: str = None) -> bytes:
     last_exc = None
     for url in urls:
         try:
-            response = requests.get(url, timeout=10)
+            response = requests.get(url, timeout=10, stream=True)
             if response.ok:
-                content = response.content
                 if output_path:
                     with open(output_path, "wb") as fh:
-                        fh.write(content)
-                return content
+                        for chunk in response.iter_content(chunk_size=8192):
+                            if chunk:
+                                fh.write(chunk)
+                    with open(output_path, "rb") as fh:
+                        return fh.read()
+                else:
+                    content = b""
+                    for chunk in response.iter_content(chunk_size=8192):
+                        if chunk:
+                            content += chunk
+                    return content
         except Exception as exc:
             last_exc = exc
             

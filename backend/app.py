@@ -7,6 +7,8 @@ import os
 import pathlib
 import logging
 import traceback
+import gc
+import tempfile
 
 from dotenv import load_dotenv
 from flask import Flask, jsonify, send_file
@@ -24,6 +26,9 @@ else:
 def create_app():
     app = Flask(__name__)
     app.secret_key = os.environ.get("SECRET_KEY", "changeme-in-production")
+    
+    # Limit file uploads to 50MB max
+    app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024
 
     CORS(
         app,
@@ -39,13 +44,20 @@ def create_app():
         response.headers["Access-Control-Allow-Origin"]  = "*"
         response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, X-Requested-With"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
+        # Force garbage collection after each request
+        gc.collect()
         return response
 
     # ── MongoDB ─────────────────────────────────────────────────────────────
     mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/stegochain")
-    client    = MongoClient(mongo_uri)
+    client    = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000)
     db        = client.get_database()
     app.db    = db
+    
+    # Store client for teardown
+    @app.teardown_appcontext
+    def cleanup_db(exception):
+        pass  # MongoDB client is closed on shutdown
 
     # ── Blueprints ───────────────────────────────────────────────────────────
     from routes.auth_routes       import auth_bp
@@ -114,5 +126,5 @@ if __name__ == "__main__":
         datefmt="%H:%M:%S",
     )
     app  = create_app()
-    port = int(os.environ.get("FLASK_PORT", 5000))
-    app.run(debug=True, use_reloader=False, host="0.0.0.0", port=port)
+    # Use production-safe settings
+    app.run(debug=False, use_reloader=False, host="0.0.0.0", port=int(os.environ.get("FLASK_PORT", 5000)))
