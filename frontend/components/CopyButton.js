@@ -25,17 +25,17 @@ export default function CopyButton({ text, size = "md" }) {
         padding: 4, borderRadius: 6, display: "inline-flex",
         alignItems: "center", transition: "background 0.15s"
       }}
-      onMouseEnter={e => e.currentTarget.style.background = "#F8F7F5"}
+      onMouseEnter={e => e.currentTarget.style.background = "#FAFAFA"}
       onMouseLeave={e => e.currentTarget.style.background = "none"}
     >
       {copied ? (
         <svg width={dim} height={dim} viewBox="0 0 16 16" fill="none">
-          <path d="M3 8l3.5 3.5L13 5" stroke="#16A34A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          <path d="M3 8l3.5 3.5L13 5" stroke="#1A9F4A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       ) : (
         <svg width={dim} height={dim} viewBox="0 0 16 16" fill="none">
-          <rect x="5" y="1" width="9" height="11" rx="2" stroke="#78716C" strokeWidth="1.3"/>
-          <rect x="1" y="4" width="9" height="11" rx="2" stroke="#78716C" strokeWidth="1.3" fill="white"/>
+          <rect x="5" y="1" width="9" height="11" rx="2" stroke="#888888" strokeWidth="1.3"/>
+          <rect x="1" y="4" width="9" height="11" rx="2" stroke="#888888" strokeWidth="1.3" fill="white"/>
         </svg>
       )}
     </button>

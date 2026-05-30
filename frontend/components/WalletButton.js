@@ -2,6 +2,7 @@ import { useWallet } from "../context/WalletContext";
 import { truncateAddress } from "../utils/crypto";
 import { useState, useEffect } from "react";
 import toast from "react-hot-toast";
+import { Wallet, AlertTriangle, MetaMask } from "./Icons";
 
 export default function WalletButton({ size = "md", className = "" }) {
   const { isConnected, connecting, connect, address, isCorrectChain, switchToSepolia } = useWallet();
@@ -24,7 +25,7 @@ export default function WalletButton({ size = "md", className = "" }) {
   if (!mounted) {
     return (
       <button className={`btn-primary ${className}`} style={{ ...s, display: "inline-flex", alignItems: "center", gap: 8, opacity: 0 }}>
-        <span>🦊</span> Connect Wallet
+        <MetaMask size={size === "sm" ? 14 : size === "lg" ? 18 : 16} /> Connect Wallet
       </button>
     );
   }
@@ -45,7 +46,7 @@ export default function WalletButton({ size = "md", className = "" }) {
         className={`btn-secondary ${className}`}
         style={{ ...s, display: "inline-flex", alignItems: "center", gap: 8, textDecoration: "none" }}
       >
-        <span>🦊</span> Install MetaMask
+        <MetaMask size={size === "sm" ? 16 : size === "lg" ? 20 : 18} /> Install MetaMask
       </a>
     );
   }
@@ -65,11 +66,11 @@ export default function WalletButton({ size = "md", className = "" }) {
   if (isConnected && !isCorrectChain) {
     return (
       <button onClick={switchToSepolia} className={className} style={{
-        ...s, background: "#D97706", color: "white", border: "none",
+        ...s, background: "#CF8100", color: "white", border: "none",
         borderRadius: 10, fontWeight: 500, cursor: "pointer",
         display: "inline-flex", alignItems: "center", gap: 8
       }}>
-        ⚠️ Switch to Ethereum Sepolia
+        <AlertTriangle size={size === "sm" ? 14 : size === "lg" ? 18 : 16} /> Switch Network
       </button>
     );
   }
@@ -79,16 +80,16 @@ export default function WalletButton({ size = "md", className = "" }) {
       <button onClick={handleCopy} className={`btn-secondary ${className}`} style={{
         ...s, display: "inline-flex", alignItems: "center", gap: 8
       }}>
-        <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#16A34A", flexShrink: 0 }}/>
+        <MetaMask size={size === "sm" ? 14 : size === "lg" ? 18 : 16} style={{ flexShrink: 0 }} />
         <span className="mono">{truncateAddress(address)}</span>
         {copied ? (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d="M2 7l3 3 7-7" stroke="#16A34A" strokeWidth="2" strokeLinecap="round"/>
+            <path d="M2 7l3 3 7-7" stroke="#1A9F4A" strokeWidth="2" strokeLinecap="round"/>
           </svg>
         ) : (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="4" y="1" width="8" height="10" rx="2" stroke="#78716C" strokeWidth="1.3"/>
-            <rect x="1" y="4" width="8" height="10" rx="2" stroke="#78716C" strokeWidth="1.3" fill="white"/>
+            <rect x="4" y="1" width="8" height="10" rx="2" stroke="#888888" strokeWidth="1.3"/>
+            <rect x="1" y="4" width="8" height="10" rx="2" stroke="#888888" strokeWidth="1.3" fill="white"/>
           </svg>
         )}
       </button>
@@ -97,7 +98,9 @@ export default function WalletButton({ size = "md", className = "" }) {
 
   return (
     <button onClick={connect} className={`btn-primary ${className}`} style={{ ...s, display: "inline-flex", alignItems: "center", gap: 8 }}>
-      <span>🦊</span> Connect Wallet
+      <MetaMask size={size === "sm" ? 16 : size === "lg" ? 20 : 18} />
+      <span>Connect Wallet</span>
     </button>
   );
 }
+

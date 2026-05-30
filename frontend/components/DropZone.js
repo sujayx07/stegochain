@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { motion, AnimatePresence } from "framer-motion";
+import { Image, Audio, FileText, Upload, AlertTriangle } from "./Icons";
 
 export default function DropZone({ onFileSelected, accept, label = "Drop file here or click to browse", hint, maxSizeMB = 10 }) {
   const [error, setError]       = useState(null);
@@ -33,8 +34,8 @@ export default function DropZone({ onFileSelected, accept, label = "Drop file he
         {...getRootProps()}
         whileHover={{ scale: 1.005 }}
         animate={{
-          borderColor: error ? "#DC2626" : isDragActive ? "#F97316" : selected ? "#F97316" : "#E7E5E4",
-          background: isDragActive ? "#FFF0E6" : selected ? "#FFFBF9" : "#FAFAF9",
+          borderColor: error ? "#E03131" : isDragActive ? "#E8680C" : selected ? "#E8680C" : "rgba(231, 229, 228, 0.7)",
+          background: isDragActive ? "rgba(255, 240, 230, 0.72)" : selected ? "rgba(255, 251, 249, 0.72)" : "rgba(255, 255, 255, 0.45)",
         }}
         transition={{ duration: 0.2 }}
         style={{
@@ -47,6 +48,8 @@ export default function DropZone({ onFileSelected, accept, label = "Drop file he
           outline: "none",
           position: "relative",
           overflow: "hidden",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
         }}
       >
         {/* Active drag overlay */}
@@ -69,18 +72,18 @@ export default function DropZone({ onFileSelected, accept, label = "Drop file he
               <motion.div
                 animate={{ rotate: [0, -5, 5, 0] }}
                 transition={{ duration: 0.5, delay: 0.1 }}
-                style={{ fontSize: 40 }}
+                style={{ color: "#E8680C" }}
               >
-                {isImage ? "🖼️" : isAudio ? "🎵" : "📄"}
+                {isImage ? <Image size={40} /> : isAudio ? <Audio size={40} /> : <FileText size={40} />}
               </motion.div>
               <div>
-                <div style={{ fontWeight: 700, color: "#1C1917", fontSize: 14 }}>{selected.name}</div>
-                <div style={{ fontSize: 12, color: "#78716C", marginTop: 3 }}>{sizeStr} · {selected.type}</div>
+                <div style={{ fontWeight: 700, color: "#111111", fontSize: 14 }}>{selected.name}</div>
+                <div style={{ fontSize: 12, color: "#888888", marginTop: 3 }}>{sizeStr} · {selected.type}</div>
               </div>
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <span className="badge badge-orange">{isImage ? "✓ Image ready" : isAudio ? "✓ Audio ready" : "✓ File ready"}</span>
               </div>
-              <div style={{ fontSize: 11, color: "#A8A29E", marginTop: 2 }}>Click to change file</div>
+              <div style={{ fontSize: 11, color: "#BBBBBB", marginTop: 2 }}>Click to change file</div>
             </motion.div>
           ) : (
             <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
@@ -90,21 +93,21 @@ export default function DropZone({ onFileSelected, accept, label = "Drop file he
               <motion.div
                 animate={isDragActive ? { y: [-4, 4, -4], scale: 1.1 } : { y: [0, -4, 0] }}
                 transition={{ duration: isDragActive ? 0.6 : 2, repeat: Infinity, ease: "easeInOut" }}
-                style={{ width: 52, height: 52, borderRadius: 16, background: isDragActive ? "#FFF0E6" : "#F8F7F5", border: `1.5px solid ${isDragActive ? "#FED7AA" : "#E7E5E4"}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24 }}
+                style={{ width: 52, height: 52, borderRadius: 16, background: isDragActive ? "#FFF4EB" : "#FAFAFA", border: `1.5px solid ${isDragActive ? "#F9DCC4" : "#EBEBEB"}`, display: "flex", alignItems: "center", justifyContent: "center", color: "#E8680C" }}
               >
-                {isDragActive ? "📂" : "☁️"}
+                <Upload size={24} />
               </motion.div>
               <div>
-                <div style={{ fontWeight: 600, color: isDragActive ? "#F97316" : "#1C1917", fontSize: 14, transition: "color 0.2s" }}>
+                <div style={{ fontWeight: 600, color: isDragActive ? "#E8680C" : "#111111", fontSize: 14, transition: "color 0.2s" }}>
                   {isDragActive ? "Release to upload" : label}
                 </div>
                 {!isDragActive && (
-                  <div style={{ fontSize: 13, color: "#A8A29E", marginTop: 4 }}>
-                    or <span style={{ color: "#F97316", fontWeight: 600 }}>browse files</span>
+                  <div style={{ fontSize: 13, color: "#BBBBBB", marginTop: 4 }}>
+                    or <span style={{ color: "#E8680C", fontWeight: 600 }}>browse files</span>
                   </div>
                 )}
               </div>
-              {hint && <div style={{ fontSize: 12, color: "#A8A29E", maxWidth: 280 }}>{hint}</div>}
+              {hint && <div style={{ fontSize: 12, color: "#BBBBBB", maxWidth: 280 }}>{hint}</div>}
             </motion.div>
           )}
         </AnimatePresence>
@@ -113,9 +116,9 @@ export default function DropZone({ onFileSelected, accept, label = "Drop file he
       <AnimatePresence>
         {error && (
           <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-            style={{ marginTop: 8, padding: "8px 12px", background: "#FEF2F2", border: "1px solid #FCA5A5", borderRadius: 8, color: "#DC2626", fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}
+            style={{ marginTop: 8, padding: "8px 12px", background: "#FFF0F0", border: "1px solid #FFC4C4", borderRadius: 8, color: "#E03131", fontSize: 12, display: "flex", alignItems: "center", gap: 6 }}
           >
-            <span>⚠️</span> {error}
+            <AlertTriangle size={14} style={{ color: "#E03131" }} /> {error}
           </motion.div>
         )}
       </AnimatePresence>

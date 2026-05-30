@@ -19,7 +19,7 @@ function getExternalUrl(value, type) {
 }
 
 export default function HashDisplay({ value, type = "address", truncate: doTruncate = true, showLink = true }) {
-  if (!value) return <span style={{ color: "#A8A29E" }}>—</span>;
+  if (!value) return <span style={{ color: "#BBBBBB" }}>—</span>;
 
   const displayValue = doTruncate ? truncate(value, type) : value;
   const externalUrl = showLink ? getExternalUrl(value, type) : null;
@@ -27,12 +27,12 @@ export default function HashDisplay({ value, type = "address", truncate: doTrunc
   return (
     <span style={{
       display: "inline-flex", alignItems: "center", gap: 6,
-      background: "#FFF0E6", borderRadius: 8,
+      background: "#FFF4EB", borderRadius: 8,
       padding: "3px 10px", fontSize: 12
     }}>
       <span
         className="mono"
-        style={{ color: "#C2410C" }}
+        style={{ color: "#B85A0C" }}
         title={value}
       >
         {displayValue}
@@ -43,7 +43,7 @@ export default function HashDisplay({ value, type = "address", truncate: doTrunc
           href={externalUrl}
           target="_blank"
           rel="noopener noreferrer"
-          style={{ display: "inline-flex", color: "#78716C" }}
+          style={{ display: "inline-flex", color: "#888888" }}
           title="View on Etherscan"
         >
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none">

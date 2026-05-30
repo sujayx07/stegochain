@@ -26,8 +26,8 @@ function StatusBadge({ active }) {
       className="inline-block px-2 py-0.5 text-xs font-semibold rounded-full"
       style={{
         backgroundColor: active ? "rgba(34,197,94,0.12)"  : "rgba(239,68,68,0.12)",
-        color:           active ? "#22c55e"               : "#ef4444",
-        border:          `1px solid ${active ? "#22c55e" : "#ef4444"}`,
+        color:           active ? "#22c55e"               : "#F03E3E",
+        border:          `1px solid ${active ? "#22c55e" : "#F03E3E"}`,
       }}
     >
       {active ? "Active" : "Revoked"}
@@ -144,7 +144,7 @@ export default function LedgerTable({
                         </button>
                         <button
                           onClick={() => onRevoke(rec.record_id ?? idx)}
-                          style={{ ...btnBase, backgroundColor: "rgba(239,68,68,0.12)", color: "#ef4444" }}
+                          style={{ ...btnBase, backgroundColor: "rgba(239,68,68,0.12)", color: "#F03E3E" }}
                         >
                           Revoke
                         </button>

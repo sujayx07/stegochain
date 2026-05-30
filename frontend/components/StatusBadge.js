@@ -1,13 +1,13 @@
 const STATUS_MAP = {
-  active:   { label: "Active",   bg: "#DCFCE7", color: "#16A34A", dot: "#16A34A" },
-  revoked:  { label: "Revoked",  bg: "#FEE2E2", color: "#DC2626", dot: "#DC2626" },
-  pending:  { label: "Pending",  bg: "#FEF3C7", color: "#D97706", dot: "#D97706" },
-  complete: { label: "Complete", bg: "#DCFCE7", color: "#16A34A", dot: "#16A34A" },
-  failed:   { label: "Failed",   bg: "#FEE2E2", color: "#DC2626", dot: "#DC2626" },
+  active:   { label: "Active",   bg: "#DCFCE7", color: "#1A9F4A", dot: "#1A9F4A" },
+  revoked:  { label: "Revoked",  bg: "#FEE2E2", color: "#E03131", dot: "#E03131" },
+  pending:  { label: "Pending",  bg: "#FFFAF0", color: "#CF8100", dot: "#CF8100" },
+  complete: { label: "Complete", bg: "#DCFCE7", color: "#1A9F4A", dot: "#1A9F4A" },
+  failed:   { label: "Failed",   bg: "#FEE2E2", color: "#E03131", dot: "#E03131" },
 };
 
 export default function StatusBadge({ status, size = "md" }) {
-  const s = STATUS_MAP[status] || { label: status, bg: "#F8F7F5", color: "#78716C", dot: "#A8A29E" };
+  const s = STATUS_MAP[status] || { label: status, bg: "#FAFAFA", color: "#888888", dot: "#BBBBBB" };
   const fontSize = size === "sm" ? 11 : 12;
   const dotSize = size === "sm" ? 6 : 7;
 

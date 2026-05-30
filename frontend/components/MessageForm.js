@@ -123,7 +123,7 @@ export default function MessageForm({
         <p
           data-testid="form-error"
           className="text-sm px-3 py-2 rounded"
-          style={{ color: "#ef4444", backgroundColor: "rgba(239,68,68,0.08)" }}
+          style={{ color: "#F03E3E", backgroundColor: "rgba(239,68,68,0.08)" }}
         >
           {error}
         </p>

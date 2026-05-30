@@ -5,6 +5,7 @@ import Navbar from "../components/Navbar";
 import HashDisplay from "../components/HashDisplay";
 import { getGraphSummary, getAnomalyScores, getNodeStats, flagNode } from "../utils/api";
 import { truncateAddress } from "../utils/crypto";
+import { Cpu } from "../components/Icons";
 
 const TRAINING_MESSAGES = [
   "Building communication graph…",
@@ -14,10 +15,10 @@ const TRAINING_MESSAGES = [
 ];
 
 function ScoreBar({ score }) {
-  const color = score < 0.5 ? "#16A34A" : score < 0.7 ? "#D97706" : "#DC2626";
+  const color = score < 0.5 ? "#1A9F4A" : score < 0.7 ? "#CF8100" : "#E03131";
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-      <div style={{ flex: 1, height: 8, background: "#F3F4F6", borderRadius: 4, overflow: "hidden" }}>
+      <div style={{ flex: 1, height: 8, background: "#F5F5F5", borderRadius: 4, overflow: "hidden" }}>
         <div style={{ width: `${score * 100}%`, height: "100%", background: color, transition: "width 0.5s ease", borderRadius: 4 }}/>
       </div>
       <span style={{ fontSize: 12, color, fontWeight: 600, minWidth: 40 }}>{score.toFixed(3)}</span>
@@ -99,8 +100,8 @@ export default function Anomaly() {
       <main style={{ maxWidth: 1000, margin: "0 auto", padding: "32px 24px" }}>
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#1C1917", marginBottom: 4 }}>Network Anomaly Detection</h1>
-          <p style={{ fontSize: 14, color: "#78716C" }}>AI-powered communication pattern analysis using Graph Neural Networks</p>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: "#111111", marginBottom: 4 }}>Network Anomaly Detection</h1>
+          <p style={{ fontSize: 14, color: "#888888" }}>AI-powered communication pattern analysis using Graph Neural Networks</p>
         </motion.div>
 
         {/* Network Summary */}
@@ -113,8 +114,8 @@ export default function Anomaly() {
               { label: "Time Span", value: summary.time_span || "—" },
             ].map((s, i) => (
               <div key={i} className="card" style={{ padding: "14px 18px" }}>
-                <div style={{ fontSize: 20, fontWeight: 700, color: "#F97316", fontFamily: i === 2 ? "monospace" : undefined }}>{s.value ?? "—"}</div>
-                <div style={{ fontSize: 12, color: "#78716C", marginTop: 3 }}>{s.label}</div>
+                <div style={{ fontSize: 20, fontWeight: 700, color: "#E8680C", fontFamily: i === 2 ? "monospace" : undefined }}>{s.value ?? "—"}</div>
+                <div style={{ fontSize: 12, color: "#888888", marginTop: 3 }}>{s.label}</div>
               </div>
             ))}
           </div>
@@ -122,24 +123,24 @@ export default function Anomaly() {
 
         {/* Run Analysis */}
         <div className="card" style={{ padding: 28, marginBottom: 24 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: "#1C1917", marginBottom: 16 }}>Run Anomaly Analysis</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: "#111111", marginBottom: 16 }}>Run Anomaly Analysis</h2>
           <div style={{ display: "flex", alignItems: "center", gap: 14, flexWrap: "wrap" }}>
             <div>
-              <label style={{ fontSize: 13, fontWeight: 500, color: "#1C1917", display: "block", marginBottom: 6 }}>Epochs</label>
+              <label style={{ fontSize: 13, fontWeight: 500, color: "#111111", display: "block", marginBottom: 6 }}>Epochs</label>
               <input
                 type="number" min={50} max={500} value={epochs}
                 onChange={e => setEpochs(Number(e.target.value))}
                 className="input-field" style={{ width: 100 }}
               />
             </div>
-            <button className="btn-primary" style={{ alignSelf: "flex-end", padding: "10px 24px" }} onClick={handleRun} disabled={running}>
-              {running ? "Analysing…" : "🧠 Run Analysis"}
+            <button className="btn-primary" style={{ alignSelf: "flex-end", padding: "10px 24px", display: "inline-flex", alignItems: "center", gap: 6 }} onClick={handleRun} disabled={running}>
+              {running ? "Analysing…" : <><Cpu size={14} /> Run Analysis</>}
             </button>
           </div>
           {running && (
             <div style={{ marginTop: 20, display: "flex", alignItems: "center", gap: 12 }}>
-              <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2.5px solid #FFF0E6", borderTopColor: "#F97316", animation: "spin 0.8s linear infinite" }}/>
-              <span style={{ fontSize: 14, color: "#78716C" }}>{TRAINING_MESSAGES[trainingMsg]}</span>
+              <div style={{ width: 20, height: 20, borderRadius: "50%", border: "2.5px solid #FFF4EB", borderTopColor: "#E8680C", animation: "spin 0.8s linear infinite" }}/>
+              <span style={{ fontSize: 14, color: "#888888" }}>{TRAINING_MESSAGES[trainingMsg]}</span>
             </div>
           )}
         </div>
@@ -149,24 +150,24 @@ export default function Anomaly() {
           {results && (
             <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card" style={{ padding: 28, marginBottom: 24 }}>
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
-                <h2 style={{ fontSize: 16, fontWeight: 600, color: "#1C1917" }}>Analysis Results</h2>
-                <span style={{ fontSize: 13, color: flagged.length > 0 ? "#DC2626" : "#16A34A" }}>
+                <h2 style={{ fontSize: 16, fontWeight: 600, color: "#111111" }}>Analysis Results</h2>
+                <span style={{ fontSize: 13, color: flagged.length > 0 ? "#E03131" : "#1A9F4A" }}>
                   {flagged.length} of {scores.length} nodes flagged (threshold 0.7)
                 </span>
               </div>
               <div style={{ overflowX: "auto" }}>
                 <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 13 }}>
                   <thead>
-                    <tr style={{ borderBottom: "1px solid #E7E5E4" }}>
+                    <tr style={{ borderBottom: "1px solid #EBEBEB" }}>
                       {["#", "Address", "Anomaly Score", "Status", "Action"].map(h => (
-                        <th key={h} style={{ textAlign: "left", padding: "8px 12px", color: "#78716C", fontWeight: 500 }}>{h}</th>
+                        <th key={h} style={{ textAlign: "left", padding: "8px 12px", color: "#888888", fontWeight: 500 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {scores.map((s, i) => (
-                      <tr key={i} style={{ borderBottom: "1px solid #F5F4F3" }}>
-                        <td style={{ padding: "10px 12px", color: "#A8A29E" }}>{i + 1}</td>
+                      <tr key={i} style={{ borderBottom: "1px solid #F5F5F5" }}>
+                        <td style={{ padding: "10px 12px", color: "#BBBBBB" }}>{i + 1}</td>
                         <td style={{ padding: "10px 12px" }}>
                           <span className="mono" style={{ fontSize: 11 }}>{truncateAddress(s.address || s.node)}</span>
                         </td>
@@ -176,7 +177,7 @@ export default function Anomaly() {
                         </td>
                         <td style={{ padding: "10px 12px" }}>
                           <button onClick={() => setFlagModal(s.address || s.node)} style={{
-                            background: "none", border: "1px solid #E7E5E4", color: "#78716C",
+                            background: "none", border: "1px solid #EBEBEB", color: "#888888",
                             borderRadius: 6, padding: "4px 10px", fontSize: 12, cursor: "pointer"
                           }}>
                             Flag
@@ -193,7 +194,7 @@ export default function Anomaly() {
 
         {/* Node Lookup */}
         <div className="card" style={{ padding: 28 }}>
-          <h2 style={{ fontSize: 16, fontWeight: 600, color: "#1C1917", marginBottom: 16 }}>Node Lookup</h2>
+          <h2 style={{ fontSize: 16, fontWeight: 600, color: "#111111", marginBottom: 16 }}>Node Lookup</h2>
           <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
             <input className="input-field mono" placeholder="0x… Ethereum address" value={lookup}
               onChange={e => setLookup(e.target.value)} style={{ flex: 1 }}/>
@@ -212,9 +213,9 @@ export default function Anomaly() {
                   ["First Seen", nodeStats.first_seen],
                   ["Last Seen", nodeStats.last_seen],
                 ].map(([k, v]) => (
-                  <div key={k} style={{ background: "#F8F7F5", borderRadius: 10, padding: "12px 16px" }}>
-                    <div style={{ fontWeight: 700, fontSize: 16, color: "#1C1917" }}>{v ?? "—"}</div>
-                    <div style={{ fontSize: 11, color: "#78716C", marginTop: 2 }}>{k}</div>
+                  <div key={k} style={{ background: "#FAFAFA", borderRadius: 10, padding: "12px 16px" }}>
+                    <div style={{ fontWeight: 700, fontSize: 16, color: "#111111" }}>{v ?? "—"}</div>
+                    <div style={{ fontSize: 11, color: "#888888", marginTop: 2 }}>{k}</div>
                   </div>
                 ))}
               </div>
@@ -230,8 +231,8 @@ export default function Anomaly() {
             style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.4)", backdropFilter: "blur(4px)", zIndex: 200, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
             <motion.div initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
               style={{ background: "white", borderRadius: 20, padding: 28, maxWidth: 400, width: "100%" }}>
-              <h3 style={{ fontWeight: 700, color: "#1C1917", marginBottom: 8 }}>Flag Node</h3>
-              <div className="mono" style={{ fontSize: 11, color: "#78716C", marginBottom: 16 }}>{flagModal}</div>
+              <h3 style={{ fontWeight: 700, color: "#111111", marginBottom: 8 }}>Flag Node</h3>
+              <div className="mono" style={{ fontSize: 11, color: "#888888", marginBottom: 16 }}>{flagModal}</div>
               <textarea className="input-field" rows={3} placeholder="Reason for flagging…" value={flagReason}
                 onChange={e => setFlagReason(e.target.value)} style={{ resize: "none", marginBottom: 14 }}/>
               <div style={{ display: "flex", gap: 10 }}>

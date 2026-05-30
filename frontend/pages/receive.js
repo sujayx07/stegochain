@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/router";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
@@ -9,6 +9,7 @@ import { useAuth } from "../context/AuthContext";
 import { useWallet } from "../context/WalletContext";
 import { api, receiveMessage } from "../utils/api";
 import { buildChallengeString, buildChallengeHash } from "../utils/crypto";
+import { Lock, Unlock, Shield, Wallet, AlertTriangle, Image, Audio, List, Send, Receive as ReceiveIcon, Success } from "../components/Icons";
 
 const CONTRACT_ABI = [
   {
@@ -28,12 +29,12 @@ const CONTRACT_ABI = [
 
 /* ── Phases config ──────────────────────────────────────────── */
 const PHASES = [
-  { id: "fetching",   label: "Fetching blockchain record",     icon: "🔍" },
-  { id: "signing",    label: "MetaMask identity proof",         icon: "🦊" },
-  { id: "verifying",  label: "Signing challenge",               icon: "✍️" },
-  { id: "assembling", label: "Submitting on-chain transaction", icon: "⛓"  },
-  { id: "decrypting", label: "Decrypting & extracting",         icon: "🔓" },
-  { id: "done",       label: "Message revealed",                icon: "💬" },
+  { id: "fetching",   label: "Fetching blockchain record" },
+  { id: "signing",    label: "MetaMask identity proof" },
+  { id: "verifying",  label: "Signing challenge" },
+  { id: "assembling", label: "Submitting on-chain transaction" },
+  { id: "decrypting", label: "Decrypting and extracting" },
+  { id: "done",       label: "Message revealed" },
 ];
 
 /* ── Lock animation component ───────────────────────────────── */
@@ -82,27 +83,29 @@ function LockReveal({ revealed, onDone }) {
           }
           onAnimationComplete={() => revealed && onDone?.()}
           style={{
-            fontSize: 64, userSelect: "none", lineHeight: 1,
+            userSelect: "none", lineHeight: 1,
+            color: revealed ? "#1A9F4A" : "#E8680C",
             filter: revealed
               ? "drop-shadow(0 0 18px rgba(22,163,74,0.6))"
               : "drop-shadow(0 6px 14px rgba(249,115,22,0.35))",
             transition: "filter 0.6s ease",
+            display: "flex", alignItems: "center", justifyContent: "center"
           }}
         >
-          {revealed ? "🔓" : "🔒"}
+          {revealed ? <Unlock size={64} /> : <Lock size={64} />}
         </motion.div>
       </div>
 
       {/* Status text with blinking dots */}
       <div style={{ textAlign: "center" }}>
-        <div style={{ fontSize: 14, color: revealed ? "#16A34A" : "#78716C", fontWeight: 600, transition: "color 0.5s ease" }}>
+        <div style={{ fontSize: 14, color: revealed ? "#1A9F4A" : "#888888", fontWeight: 600, transition: "color 0.5s ease" }}>
           {revealed ? "Decryption authorised" : "Awaiting authorisation"}
           {!revealed && (
             <span style={{ display: "inline-flex", gap: 2, marginLeft: 2 }}>
               {[0, 0.2, 0.4].map((delay, i) => (
                 <span key={i} style={{
                   display: "inline-block", width: 3, height: 3, borderRadius: "50%",
-                  background: "#F97316", marginBottom: 1,
+                  background: "#E8680C", marginBottom: 1,
                   animation: `breathe 1.2s ease-in-out ${delay}s infinite`,
                 }}/>
               ))}
@@ -110,7 +113,7 @@ function LockReveal({ revealed, onDone }) {
           )}
         </div>
         {!revealed && (
-          <div style={{ fontSize: 12, color: "#A8A29E", marginTop: 4 }}>
+          <div style={{ fontSize: 12, color: "#BBBBBB", marginTop: 4 }}>
             MetaMask signature verification in progress
           </div>
         )}
@@ -144,7 +147,7 @@ function LockReveal({ revealed, onDone }) {
         }}>
           <div style={{
             width: 14, height: 14, borderRadius: "50%",
-            background: revealed ? "#16A34A" : "#F97316",
+            background: revealed ? "#1A9F4A" : "#E8680C",
             transition: "background 0.8s ease",
             animation: "breathe 1.5s ease-in-out infinite",
           }}/>
@@ -181,8 +184,8 @@ function StepProgress({ currentPhase }) {
               <div style={{ position: "relative", width: 28, height: 28, flexShrink: 0 }}>
                 <div style={{
                   width: 28, height: 28, borderRadius: "50%",
-                  background: isDone ? "#16A34A" : isActive ? "white" : "#F0EDE9",
-                  border: `2px solid ${isDone ? "#16A34A" : isActive ? "#FED7AA" : "#E7E5E4"}`,
+                  background: isDone ? "#1A9F4A" : isActive ? "white" : "#F5F5F5",
+                  border: `2px solid ${isDone ? "#1A9F4A" : isActive ? "#F9DCC4" : "#EBEBEB"}`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.35s ease",
                   position: "relative", zIndex: 1,
@@ -195,21 +198,21 @@ function StepProgress({ currentPhase }) {
                   {isActive && (
                     <div style={{
                       width: 22, height: 22, borderRadius: "50%",
-                      border: "2.5px solid #FED7AA",
-                      borderTopColor: "#F97316",
+                      border: "2.5px solid #F9DCC4",
+                      borderTopColor: "#E8680C",
                       animation: "spin 0.75s linear infinite",
                       position: "absolute",
                     }}/>
                   )}
                   {isPending && (
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#D1D5DB" }}/>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#DDDDDD" }}/>
                   )}
                 </div>
               </div>
               {!isLast && (
                 <div style={{
                   width: 2, flex: 1, minHeight: 14,
-                  background: isDone ? "#16A34A" : "#E7E5E4",
+                  background: isDone ? "#1A9F4A" : "#EBEBEB",
                   transition: "background 0.5s ease",
                   margin: "3px 0",
                 }}/>
@@ -220,7 +223,7 @@ function StepProgress({ currentPhase }) {
             <div style={{ flex: 1, paddingBottom: isLast ? 0 : 12, paddingTop: 3 }}>
               <div style={{
                 fontSize: 13, fontWeight: 700,
-                color: isDone ? "#16A34A" : isActive ? "#F97316" : "#A8A29E",
+                color: isDone ? "#1A9F4A" : isActive ? "#E8680C" : "#BBBBBB",
                 transition: "color 0.3s ease",
               }}>
                 {s.label}
@@ -229,13 +232,13 @@ function StepProgress({ currentPhase }) {
                     {[0, 0.2, 0.4].map((d, j) => (
                       <span key={j} style={{
                         display: "inline-block", width: 3, height: 3, borderRadius: "50%",
-                        background: "#F97316", animation: `breathe 1.2s ease-in-out ${d}s infinite`,
+                        background: "#E8680C", animation: `breathe 1.2s ease-in-out ${d}s infinite`,
                       }}/>
                     ))}
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 11, color: "#A8A29E", marginTop: 1 }}>{s.sub}</div>
+              <div style={{ fontSize: 11, color: "#BBBBBB", marginTop: 1 }}>{s.sub}</div>
             </div>
 
           </div>
@@ -251,7 +254,7 @@ function Confetti() {
   const pieces = Array.from({ length: 20 }, (_, i) => ({
     id: i,
     x: Math.random() * 100,
-    color: ["#F97316","#F59E0B","#16A34A","#3B82F6","#EC4899","#8B5CF6"][Math.floor(Math.random() * 6)],
+    color: ["#E8680C","#F09C00","#1A9F4A","#3B82F6","#EC4899","#8B5CF6"][Math.floor(Math.random() * 6)],
     size: 6 + Math.random() * 8,
     delay: Math.random() * 0.8,
     duration: 1.5 + Math.random(),
@@ -382,10 +385,12 @@ export default function Receive() {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg,#FFF0E6,#FFE4CC)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, border: "1.5px solid #FED7AA" }}>🔓</div>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg,#FFF4EB,#FFE8D6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#E8680C", border: "1.5px solid #F9DCC4" }}>
+              <Unlock size={22} />
+            </div>
             <div>
-              <h1 style={{ fontSize: 26, fontWeight: 800, color: "#1C1917", letterSpacing: "-0.02em", margin: 0 }}>Retrieve Message</h1>
-              <p style={{ fontSize: 14, color: "#78716C", margin: 0 }}>Prove your identity on-chain to decrypt a hidden message</p>
+              <h1 style={{ fontSize: 26, fontWeight: 800, color: "#111111", letterSpacing: "-0.02em", margin: 0 }}>Retrieve Message</h1>
+              <p style={{ fontSize: 14, color: "#888888", margin: 0 }}>Prove your identity on-chain to decrypt a hidden message</p>
             </div>
           </div>
         </motion.div>
@@ -405,25 +410,25 @@ export default function Receive() {
                     onKeyDown={e => e.key === "Enter" && sessionId.trim() && isConnected && handleDecrypt()}
                     style={{ fontSize: 14, letterSpacing: "0.5px" }}
                   />
-                  <div style={{ fontSize: 12, color: "#A8A29E", marginTop: 6 }}>The session ID was shared by the message sender.</div>
+                  <div style={{ fontSize: 12, color: "#BBBBBB", marginTop: 6 }}>The session ID was shared by the message sender.</div>
                 </div>
 
-                <div style={{ marginBottom: 24 }}>
+                 <div style={{ marginBottom: 24 }}>
                   <label className="label">Media Type</label>
                   <div style={{ display: "flex", gap: 10 }}>
-                    {[{ val: "image", icon: "🖼", label: "Image (PNG/BMP)" }, { val: "audio", icon: "🎵", label: "Audio (WAV)" }].map(ft => (
+                    {[{ val: "image", icon: Image, label: "Image (PNG/BMP)" }, { val: "audio", icon: Audio, label: "Audio (WAV)" }].map(ft => (
                       <motion.label key={ft.val} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                         style={{
                           flex: 1, display: "flex", alignItems: "center", gap: 10, cursor: "pointer",
                           padding: "12px 16px", borderRadius: 10, border: "1.5px solid",
-                          borderColor: fileType === ft.val ? "#F97316" : "#E7E5E4",
-                          background: fileType === ft.val ? "#FFF0E6" : "white",
+                          borderColor: fileType === ft.val ? "#E8680C" : "#EBEBEB",
+                          background: fileType === ft.val ? "#FFF4EB" : "white",
                           transition: "all 0.2s ease",
                         }}
                       >
-                        <input type="radio" name="filetype" value={ft.val} checked={fileType === ft.val} onChange={() => setFileType(ft.val)} style={{ accentColor: "#F97316" }} />
-                        <span style={{ fontSize: 18 }}>{ft.icon}</span>
-                        <span style={{ fontSize: 14, fontWeight: 600, color: fileType === ft.val ? "#F97316" : "#1C1917" }}>{ft.label}</span>
+                        <input type="radio" name="filetype" value={ft.val} checked={fileType === ft.val} onChange={() => setFileType(ft.val)} style={{ accentColor: "#E8680C" }} />
+                        {React.createElement(ft.icon, { size: 18, style: { color: fileType === ft.val ? "#E8680C" : "#888888" } })}
+                        <span style={{ fontSize: 14, fontWeight: 600, color: fileType === ft.val ? "#E8680C" : "#111111" }}>{ft.label}</span>
                       </motion.label>
                     ))}
                   </div>
@@ -431,32 +436,32 @@ export default function Receive() {
 
                 {!isConnected && (
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    style={{ padding: "12px 16px", background: "#FFF7ED", border: "1.5px solid #FED7AA", borderRadius: 10, fontSize: 13, color: "#C2410C", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}
+                    style={{ padding: "12px 16px", background: "#FFF8F3", border: "1.5px solid #F9DCC4", borderRadius: 10, fontSize: 13, color: "#B85A0C", marginBottom: 16, display: "flex", alignItems: "center", gap: 8 }}
                   >
-                    🦊 Connect your MetaMask wallet to continue
+                    <Wallet size={16} /> Connect your MetaMask wallet to continue
                   </motion.div>
                 )}
 
                 <motion.button
                   id="decrypt-button" className="btn-primary"
-                  style={{ width: "100%", padding: "14px 20px", fontSize: 15, borderRadius: 12 }}
+                  style={{ width: "100%", padding: "14px 20px", fontSize: 15, borderRadius: 12, display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }}
                   disabled={!sessionId.trim() || !isConnected}
                   onClick={handleDecrypt}
                   whileHover={sessionId.trim() && isConnected ? { scale: 1.01 } : {}}
                   whileTap={sessionId.trim() && isConnected ? { scale: 0.98 } : {}}
                 >
-                  {!isConnected ? "Connect wallet first" : "🔓 Decrypt Message"}
+                  {!isConnected ? "Connect wallet first" : <><Unlock size={16} /> Decrypt Message</>}
                 </motion.button>
               </div>
 
               {/* Info card */}
               <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                style={{ marginTop: 16, padding: "16px 20px", background: "#F0FDF4", border: "1.5px solid #BBF7D0", borderRadius: 14, display: "flex", gap: 12, alignItems: "flex-start" }}
+                style={{ marginTop: 16, padding: "16px 20px", background: "#EDFCF2", border: "1.5px solid #B4EDCC", borderRadius: 14, display: "flex", gap: 12, alignItems: "flex-start" }}
               >
-                <span style={{ fontSize: 20, flexShrink: 0 }}>🛡️</span>
+                <Shield size={20} style={{ color: "#1A9F4A", marginTop: 2, flexShrink: 0 }} />
                 <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#16A34A", marginBottom: 4 }}>Zero-trust decryption</div>
-                  <div style={{ fontSize: 12, color: "#78716C", lineHeight: 1.65 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#1A9F4A", marginBottom: 4 }}>Zero-trust decryption</div>
+                  <div style={{ fontSize: 12, color: "#888888", lineHeight: 1.65 }}>
                     Your identity is verified purely by cryptographic proof on the smart contract. MetaMask will sign a challenge (free) then submit one small transaction to authorise decryption on-chain.
                   </div>
                 </div>
@@ -471,35 +476,35 @@ export default function Receive() {
 
                 {/* Record found badge */}
                 <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-                  style={{ marginBottom: 20, padding: 16, background: "#F0FDF4", borderRadius: 12, border: "1.5px solid #BBF7D0" }}
+                  style={{ marginBottom: 20, padding: 16, background: "#EDFCF2", borderRadius: 12, border: "1.5px solid #B4EDCC" }}
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
-                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#16A34A", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#1A9F4A", display: "flex", alignItems: "center", justifyContent: "center" }}>
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 4" stroke="white" strokeWidth="2" strokeLinecap="round"/></svg>
                     </div>
-                    <span style={{ fontSize: 14, fontWeight: 700, color: "#16A34A" }}>Record found on blockchain</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#1A9F4A" }}>Record found on blockchain</span>
                   </div>
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12, color: "#78716C" }}>
-                    {record.sender && <div>From: <span className="mono" style={{ color: "#1C1917" }}>{record.sender.slice(0,16)}…</span></div>}
-                    <div>Record ID: <span className="mono" style={{ color: "#1C1917" }}>#{record.record_id}</span></div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, fontSize: 12, color: "#888888" }}>
+                    {record.sender && <div>From: <span className="mono" style={{ color: "#111111" }}>{record.sender.slice(0,16)}…</span></div>}
+                    <div>Record ID: <span className="mono" style={{ color: "#111111" }}>#{record.record_id}</span></div>
                   </div>
                 </motion.div>
 
                 {/* Steps info */}
-                <div style={{ marginBottom: 24, padding: 16, background: "#FFF7ED", border: "1.5px solid #FED7AA", borderRadius: 12 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: "#C2410C", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
-                    🦊 Two MetaMask steps
+                <div style={{ marginBottom: 24, padding: 16, background: "#FFF8F3", border: "1.5px solid #F9DCC4", borderRadius: 12 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: "#B85A0C", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }}>
+                    <Wallet size={16} style={{ color: "#E8680C" }} /> Two MetaMask steps
                   </div>
                   <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
                     {[
-                      { n: 1, label: "Sign a message", sub: "No gas — proves your identity", color: "#16A34A" },
-                      { n: 2, label: "Confirm a transaction", sub: "Small gas fee — authorises on-chain", color: "#F97316" },
+                      { n: 1, label: "Sign a message", sub: "No gas — proves your identity", color: "#1A9F4A" },
+                      { n: 2, label: "Confirm a transaction", sub: "Small gas fee — authorises on-chain", color: "#E8680C" },
                     ].map(s => (
                       <div key={s.n} style={{ display: "flex", alignItems: "center", gap: 10 }}>
                         <div style={{ width: 22, height: 22, borderRadius: "50%", background: s.color, color: "white", fontSize: 11, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{s.n}</div>
                         <div>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: "#1C1917" }}>{s.label}</div>
-                          <div style={{ fontSize: 11, color: "#78716C" }}>{s.sub}</div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: "#111111" }}>{s.label}</div>
+                          <div style={{ fontSize: 11, color: "#888888" }}>{s.sub}</div>
                         </div>
                       </div>
                     ))}
@@ -507,13 +512,13 @@ export default function Receive() {
                 </div>
 
                 <motion.button className="btn-primary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-                  style={{ width: "100%", padding: "14px 20px", fontSize: 15, borderRadius: 12 }}
+                  style={{ width: "100%", padding: "14px 20px", fontSize: 15, borderRadius: 12, display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }}
                   onClick={handleSign}
                 >
-                  🦊 Sign &amp; Authorise Decryption
+                  <Wallet size={16} /> Sign &amp; Authorise Decryption
                 </motion.button>
 
-                <button className="btn-ghost" style={{ width: "100%", marginTop: 10, color: "#78716C" }} onClick={() => setPhase("form")}>
+                <button className="btn-ghost" style={{ width: "100%", marginTop: 10, color: "#888888" }} onClick={() => setPhase("form")}>
                   ← Back
                 </button>
               </div>
@@ -529,23 +534,23 @@ export default function Receive() {
                 <LockReveal revealed={false} />
 
                 <div style={{ textAlign: "center", marginTop: 8 }}>
-                  <div style={{ fontSize: 15, fontWeight: 700, color: "#1C1917", marginBottom: 6 }}>
+                  <div style={{ fontSize: 15, fontWeight: 700, color: "#111111", marginBottom: 6 }}>
                     {phase === "fetching"   && "Fetching blockchain record…"}
                     {phase === "verifying"  && "Waiting for MetaMask signature…"}
                     {phase === "assembling" && "Submitting decryption request…"}
                     {phase === "decrypting" && "Decrypting & extracting message…"}
                   </div>
                   {statusMsg && (
-                    <div style={{ fontSize: 12, color: "#A8A29E", whiteSpace: "pre-wrap", lineHeight: 1.7, maxWidth: 400, margin: "0 auto" }}>
+                    <div style={{ fontSize: 12, color: "#BBBBBB", whiteSpace: "pre-wrap", lineHeight: 1.7, maxWidth: 400, margin: "0 auto" }}>
                       {statusMsg}
                     </div>
                   )}
                   {txHash && (
                     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                      style={{ marginTop: 12, padding: "8px 14px", background: "#F0FDF4", borderRadius: 8, display: "inline-flex", alignItems: "center", gap: 6 }}
+                      style={{ marginTop: 12, padding: "8px 14px", background: "#EDFCF2", borderRadius: 8, display: "inline-flex", alignItems: "center", gap: 6 }}
                     >
-                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#16A34A" }} />
-                      <span className="mono" style={{ fontSize: 11, color: "#16A34A" }}>Tx: {txHash.slice(0,20)}…</span>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", background: "#1A9F4A" }} />
+                      <span className="mono" style={{ fontSize: 11, color: "#1A9F4A" }}>Tx: {txHash.slice(0,20)}…</span>
                     </motion.div>
                   )}
                 </div>
@@ -556,11 +561,12 @@ export default function Receive() {
           {/* ── Error ───────────────────────────────────────── */}
           {phase === "error" && (
             <motion.div key="error" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }}>
-              <div className="card" style={{ padding: 36, borderColor: "#FCA5A5", textAlign: "center" }}>
-                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-                  style={{ fontSize: 52, marginBottom: 16, display: "block" }}>❌</motion.div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: "#DC2626", marginBottom: 8 }}>Decryption Failed</div>
-                <div style={{ fontSize: 14, color: "#78716C", marginBottom: 24, lineHeight: 1.7, maxWidth: 380, margin: "0 auto 24px" }}>
+              <div className="card" style={{ padding: 36, borderColor: "#FFC4C4", textAlign: "center" }}>
+                <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200, delay: 0.1 }} style={{ display: "flex", justifyContent: "center", marginBottom: 16 }}>
+                  <AlertTriangle size={52} style={{ color: "#E03131" }} />
+                </motion.div>
+                <div style={{ fontSize: 18, fontWeight: 700, color: "#E03131", marginBottom: 8 }}>Decryption Failed</div>
+                <div style={{ fontSize: 14, color: "#888888", marginBottom: 24, lineHeight: 1.7, maxWidth: 380, margin: "0 auto 24px" }}>
                   {errorMsg?.includes("not the intended") ? "You are not the intended receiver of this message." :
                    errorMsg?.includes("revoked")          ? "This record has been revoked on the blockchain." :
                    errorMsg}
@@ -585,7 +591,7 @@ export default function Receive() {
 
                 {/* Media display */}
                 {result.media_b64 && (
-                  <div style={{ position: "relative", background: "#1C1917", borderRadius: "14px 14px 0 0", overflow: "hidden", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ position: "relative", background: "#111111", borderRadius: "14px 14px 0 0", overflow: "hidden", minHeight: 200, display: "flex", alignItems: "center", justifyContent: "center" }}>
                     <img
                       src={`data:image/png;base64,${result.media_b64}`}
                       alt="Decrypted stego image"
@@ -597,7 +603,7 @@ export default function Receive() {
                         style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(28,25,23,0.5)", backdropFilter: "blur(4px)" }}
                       >
                         <div style={{ textAlign: "center" }}>
-                          <div style={{ fontSize: 40, marginBottom: 8 }}>🔒</div>
+                          <Lock size={40} style={{ color: "#FFFFFF", marginBottom: 8 }} />
                           <div style={{ fontSize: 13, color: "rgba(255,255,255,0.7)", fontWeight: 500 }}>Unlocking…</div>
                         </div>
                       </motion.div>
@@ -620,26 +626,27 @@ export default function Receive() {
                       initial={{ opacity: 0, height: 0 }}
                       animate={{ opacity: 1, height: "auto" }}
                       transition={{ duration: 0.6, ease: "easeOut" }}
-                      style={{ padding: 24, borderTop: "1px solid #E7E5E4" }}
+                      style={{ padding: 24, borderTop: "1px solid #EBEBEB" }}
                     >
                       <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
-                        <motion.div animate={{ rotate: [0,-15,15,-8,8,0] }} transition={{ duration: 0.8, delay: 0.2 }}
-                          style={{ fontSize: 22 }}>🔓</motion.div>
-                        <span style={{ fontSize: 14, fontWeight: 700, color: "#1C1917" }}>Hidden Message Revealed</span>
+                        <motion.div animate={{ rotate: [0,-15,15,-8,8,0] }} transition={{ duration: 0.8, delay: 0.2 }} style={{ color: "#1A9F4A" }}>
+                          <Unlock size={22} />
+                        </motion.div>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#111111" }}>Hidden Message Revealed</span>
                         <span className="badge badge-success" style={{ marginLeft: "auto" }}>Decrypted</span>
                       </div>
                       <motion.div
                         initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
                         style={{
-                          padding: 20, background: "linear-gradient(135deg,#FFF0E6,#FFF7EE)",
-                          border: "1.5px solid #FED7AA", borderRadius: 12,
-                          fontSize: 16, color: "#1C1917", lineHeight: 1.7, fontWeight: 500,
+                          padding: 20, background: "linear-gradient(135deg,#FFF4EB,#FFF7EE)",
+                          border: "1.5px solid #F9DCC4", borderRadius: 12,
+                          fontSize: 16, color: "#111111", lineHeight: 1.7, fontWeight: 500,
                           fontStyle: "italic", position: "relative", overflow: "hidden",
                         }}
                       >
-                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg,#F97316,#F59E0B,#F97316)", backgroundSize: "200% 100%", animation: "gradientShift 2s ease infinite" }} />
+                        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg,#E8680C,#F09C00,#E8680C)", backgroundSize: "200% 100%", animation: "gradientShift 2s ease infinite" }} />
                         "{result.message}"
-                        <div style={{ position: "absolute", bottom: -30, right: -20, fontSize: 80, opacity: 0.05, userSelect: "none" }}>💬</div>
+                        <ReceiveIcon size={80} style={{ position: "absolute", bottom: -10, right: -10, opacity: 0.04, color: "#E8680C", pointerEvents: "none" }} />
                       </motion.div>
                     </motion.div>
                   )}
@@ -656,23 +663,23 @@ export default function Receive() {
               <motion.div className="card" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}
                 style={{ padding: 22, marginBottom: 16 }}
               >
-                <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1917", marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
-                  <span>📋</span> Message Details
+                <div style={{ fontSize: 13, fontWeight: 700, color: "#111111", marginBottom: 16, display: "flex", alignItems: "center", gap: 6 }}>
+                  <List size={16} style={{ color: "#E8680C" }} /> Message Details
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
                   {record?.sender && (
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 12, color: "#78716C", minWidth: 72, fontWeight: 500 }}>Sender</span>
+                      <span style={{ fontSize: 12, color: "#888888", minWidth: 72, fontWeight: 500 }}>Sender</span>
                       <HashDisplay value={record.sender} type="address" />
                     </div>
                   )}
                   <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                    <span style={{ fontSize: 12, color: "#78716C", minWidth: 72, fontWeight: 500 }}>Session</span>
+                    <span style={{ fontSize: 12, color: "#888888", minWidth: 72, fontWeight: 500 }}>Session</span>
                     <HashDisplay value={sessionId} type="sessionid" showLink={false} />
                   </div>
                   {result.tx_hash && (
                     <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                      <span style={{ fontSize: 12, color: "#78716C", minWidth: 72, fontWeight: 500 }}>Tx Hash</span>
+                      <span style={{ fontSize: 12, color: "#888888", minWidth: 72, fontWeight: 500 }}>Tx Hash</span>
                       <HashDisplay value={result.tx_hash} type="txhash" />
                     </div>
                   )}
@@ -687,9 +694,9 @@ export default function Receive() {
                 style={{ display: "flex", gap: 12, flexWrap: "wrap" }}
               >
                 <motion.button className="btn-primary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
-                  style={{ flex: 1, padding: "13px 20px" }} onClick={handleDownload}
+                  style={{ flex: 1, padding: "13px 20px", display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }} onClick={handleDownload}
                 >
-                  ⬇ Download Decrypted File
+                  <Send size={16} style={{ transform: "rotate(90deg)" }} /> Download Decrypted File
                 </motion.button>
                 <motion.button className="btn-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
                   style={{ flex: 1, padding: "13px 20px" }}
