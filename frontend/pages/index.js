@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
@@ -482,10 +482,53 @@ export default function Home() {
   const [activeSendStep, setActiveSendStep] = useState(0);
   const [activeReceiveStep, setActiveReceiveStep] = useState(0);
 
+  const [isSendHovered, setIsSendHovered] = useState(false);
+  const [isReceiveHovered, setIsReceiveHovered] = useState(false);
+
+  const sendIntervalRef = useRef(null);
+  const receiveIntervalRef = useRef(null);
+
+  const startSendCycling = () => {
+    if (sendIntervalRef.current) return;
+    sendIntervalRef.current = setInterval(() => {
+      setActiveSendStep((prev) => (prev + 1) % 6);
+    }, 4000);
+  };
+
+  const stopSendCycling = () => {
+    if (sendIntervalRef.current) {
+      clearInterval(sendIntervalRef.current);
+      sendIntervalRef.current = null;
+    }
+  };
+
+  const startReceiveCycling = () => {
+    if (receiveIntervalRef.current) return;
+    receiveIntervalRef.current = setInterval(() => {
+      setActiveReceiveStep((prev) => (prev + 1) % 6);
+    }, 4000);
+  };
+
+  const stopReceiveCycling = () => {
+    if (receiveIntervalRef.current) {
+      clearInterval(receiveIntervalRef.current);
+      receiveIntervalRef.current = null;
+    }
+  };
+
   useEffect(() => {
     getBlockchainStats().then(setStats).catch(() => {});
     const t = setTimeout(() => getGraphSummary().then(setGraph).catch(() => {}), 1500);
-    return () => clearTimeout(t);
+    
+    // Start cycling from the start/first load
+    startSendCycling();
+    startReceiveCycling();
+
+    return () => {
+      clearTimeout(t);
+      if (sendIntervalRef.current) clearInterval(sendIntervalRef.current);
+      if (receiveIntervalRef.current) clearInterval(receiveIntervalRef.current);
+    };
   }, []);
 
   return (
@@ -623,105 +666,191 @@ export default function Home() {
               <div className="section-label">Interactive Sandbox</div>
               <h2 className="section-title">How the pipelines work</h2>
               <p style={{ fontSize: 14, color: "#888", marginTop: 8 }}>Click on any pipeline step below to see a live visual explanation of the process.</p>
+              <div style={{ fontSize: 13, color: "#E8680C", fontWeight: 700, marginTop: 12, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
+                <div className="pulse-dot-orange" style={{ width: 6, height: 6 }} /> Hover over a card to see the flow
+              </div>
             </div>
 
             {/* Send pipeline */}
-            <div style={{ marginBottom: 48 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 24, textAlign: "center" }}>Send Flow</div>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", flexWrap: "wrap", gap: 10 }}>
-                {[
-                  { n:1, icon:Cloud, label:"Upload", desc:"Cover image or audio" },
-                  { n:2, icon:Eye, label:"Embed", desc:"LSB / Echo hiding" },
-                  { n:3, icon:Lock, label:"Encrypt", desc:"AES-256-GCM" },
-                  { n:4, icon:Cloud, label:"IPFS", desc:"Upload encrypted file" },
-                  { n:5, icon:Key, label:"Fragment", desc:"Split AES key via ECC" },
-                  { n:6, icon:Network, label:"Chain", desc:"Register Merkle root" },
-                ].map((s, i, arr) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center" }}>
-                    <PipeStep 
-                      {...s} 
-                      delay={i * 0.04} 
-                      isActive={activeSendStep === i} 
-                      onClick={() => setActiveSendStep(i)} 
-                    />
-                    {i < arr.length - 1 && (
-                      <div 
-                        style={{ 
-                          width: 24, height: 2, 
-                          background: activeSendStep > i ? "linear-gradient(to right,#E8680C,#F5B888)" : "#EBEBEB", 
-                          margin: "0 3px", flexShrink: 0, marginBottom: 36,
-                          transition: "background 0.3s ease"
-                        }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+            <motion.div 
+              style={{ 
+                position: "relative",
+                overflow: "hidden",
+                marginBottom: 48,
+                borderRadius: 16,
+                padding: "24px 16px",
+                background: isSendHovered
+                  ? "linear-gradient(115deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.7) 45%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 255, 255, 0.7) 55%, rgba(255, 255, 255, 0.4) 100%)"
+                  : "rgba(255, 255, 255, 0.45)",
+                backgroundSize: "200% 100%",
+                backgroundPosition: isSendHovered ? "0% 0" : "100% 0",
+                border: isSendHovered ? "1.5px solid rgba(232, 104, 12, 0.35)" : "1.5px solid #EBEBEB",
+                boxShadow: isSendHovered 
+                  ? "0 16px 48px rgba(232, 104, 12, 0.1), inset 0 0 12px rgba(255, 255, 255, 0.6)" 
+                  : "0 4px 20px rgba(0, 0, 0, 0.02)",
+                cursor: "default"
+              }}
+              whileHover={{ y: -6, scale: 1.015 }}
+              transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              onMouseEnter={() => setIsSendHovered(true)}
+              onMouseLeave={() => setIsSendHovered(false)}
+            >
+              {/* Rotating background orange bubble */}
+              <motion.div
+                style={{
+                  position: "absolute",
+                  top: "-40px",
+                  right: "-40px",
+                  width: 170,
+                  height: 170,
+                  borderRadius: "38%",
+                  background: "radial-gradient(circle, rgba(232, 104, 12, 0.15) 0%, rgba(255, 240, 225, 0) 70%)",
+                  filter: "blur(14px)",
+                  zIndex: 0,
+                  pointerEvents: "none"
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              />
 
-              {/* Explainer card for active send step */}
-              <div style={{ maxWidth: 640, margin: "24px auto 0", background: "white", border: "1.5px solid #F5B888", borderRadius: 16, padding: "20px 24px", display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
-                <div style={{ flex: 1.2, minWidth: 260 }}>
-                  <h4 style={{ fontSize: 15, fontWeight: 800, color: "#E8680C", marginBottom: 6, fontFamily: "var(--font-heading)" }}>
-                    {SEND_STEP_EXPLANATIONS[activeSendStep].title}
-                  </h4>
-                  <p style={{ fontSize: 14, color: "#555", lineHeight: 1.6 }}>
-                    {SEND_STEP_EXPLANATIONS[activeSendStep].details}
-                  </p>
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 24, textAlign: "center" }}>Send Flow</div>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", flexWrap: "wrap", gap: 10 }}>
+                  {[
+                    { n:1, icon:Cloud, label:"Upload", desc:"Cover image or audio" },
+                    { n:2, icon:Eye, label:"Embed", desc:"LSB / Echo hiding" },
+                    { n:3, icon:Lock, label:"Encrypt", desc:"AES-256-GCM" },
+                    { n:4, icon:Cloud, label:"IPFS", desc:"Upload encrypted file" },
+                    { n:5, icon:Key, label:"Fragment", desc:"Split AES key via ECC" },
+                    { n:6, icon:Network, label:"Chain", desc:"Register Merkle root" },
+                  ].map((s, i, arr) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center" }}>
+                      <PipeStep 
+                        {...s} 
+                        delay={i * 0.04} 
+                        isActive={activeSendStep === i} 
+                        onClick={() => setActiveSendStep(i)} 
+                      />
+                      {i < arr.length - 1 && (
+                        <div 
+                          style={{ 
+                            width: 24, height: 2, 
+                            background: activeSendStep > i ? "linear-gradient(to right,#E8680C,#F5B888)" : "#EBEBEB", 
+                            margin: "0 3px", flexShrink: 0, marginBottom: 36,
+                            transition: "background 0.3s ease"
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <div style={{ flex: 0.8, minWidth: 160 }}>
-                  {SEND_STEP_EXPLANATIONS[activeSendStep].graphic}
+
+                {/* Explainer card for active send step */}
+                <div style={{ maxWidth: 640, margin: "24px auto 0", background: "white", border: "1.5px solid #F5B888", borderRadius: 16, padding: "20px 24px", display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ flex: 1.2, minWidth: 260 }}>
+                    <h4 style={{ fontSize: 15, fontWeight: 800, color: "#E8680C", marginBottom: 6, fontFamily: "var(--font-heading)" }}>
+                      {SEND_STEP_EXPLANATIONS[activeSendStep].title}
+                    </h4>
+                    <p style={{ fontSize: 14, color: "#555", lineHeight: 1.6 }}>
+                      {SEND_STEP_EXPLANATIONS[activeSendStep].details}
+                    </p>
+                  </div>
+                  <div style={{ flex: 0.8, minWidth: 160 }}>
+                    {SEND_STEP_EXPLANATIONS[activeSendStep].graphic}
+                  </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
             {/* Receive pipeline */}
-            <div>
-              <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 24, textAlign: "center" }}>Receive Flow</div>
-              <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", flexWrap: "wrap", gap: 10 }}>
-                {[
-                  { n:1, icon:Search, label:"Lookup", desc:"Session ID to record" },
-                  { n:2, icon:Send, label:"Sign", desc:"MetaMask identity proof" },
-                  { n:3, icon:Shield, label:"Verify", desc:"On-chain Merkle proof" },
-                  { n:4, icon:Key, label:"Reconstruct", desc:"ECDH to AES key" },
-                  { n:5, icon:Unlock, label:"Decrypt", desc:"AES-GCM + stego extract" },
-                  { n:6, icon:Receive, label:"Reveal", desc:"Hidden message appears" },
-                ].map((s, i, arr) => (
-                  <div key={i} style={{ display: "flex", alignItems: "center" }}>
-                    <PipeStep 
-                      {...s} 
-                      delay={i * 0.04 + 0.1} 
-                      isActive={activeReceiveStep === i} 
-                      onClick={() => setActiveReceiveStep(i)} 
-                    />
-                    {i < arr.length - 1 && (
-                      <div 
-                        style={{ 
-                          width: 24, height: 2, 
-                          background: activeReceiveStep > i ? "linear-gradient(to right,#1A9F4A,#B4EDCC)" : "#EBEBEB", 
-                          margin: "0 3px", flexShrink: 0, marginBottom: 36,
-                          transition: "background 0.3s ease" 
-                        }}
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
+            <motion.div
+              style={{
+                position: "relative",
+                overflow: "hidden",
+                borderRadius: 16,
+                padding: "24px 16px",
+                background: isReceiveHovered
+                  ? "linear-gradient(115deg, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0.7) 45%, rgba(255, 255, 255, 0.95) 50%, rgba(255, 255, 255, 0.7) 55%, rgba(255, 255, 255, 0.4) 100%)"
+                  : "rgba(255, 255, 255, 0.45)",
+                backgroundSize: "200% 100%",
+                backgroundPosition: isReceiveHovered ? "0% 0" : "100% 0",
+                border: isReceiveHovered ? "1.5px solid rgba(26, 159, 74, 0.35)" : "1.5px solid #EBEBEB",
+                boxShadow: isReceiveHovered 
+                  ? "0 16px 48px rgba(26, 159, 74, 0.1), inset 0 0 12px rgba(255, 255, 255, 0.6)" 
+                  : "0 4px 20px rgba(0, 0, 0, 0.02)",
+                cursor: "default"
+              }}
+              whileHover={{ y: -6, scale: 1.015 }}
+              transition={{ type: "spring", stiffness: 350, damping: 25 }}
+              onMouseEnter={() => setIsReceiveHovered(true)}
+              onMouseLeave={() => setIsReceiveHovered(false)}
+            >
+              {/* Rotating background orange bubble */}
+              <motion.div
+                style={{
+                  position: "absolute",
+                  top: "-40px",
+                  right: "-40px",
+                  width: 170,
+                  height: 170,
+                  borderRadius: "38%",
+                  background: "radial-gradient(circle, rgba(232, 104, 12, 0.15) 0%, rgba(255, 240, 225, 0) 70%)",
+                  filter: "blur(14px)",
+                  zIndex: 0,
+                  pointerEvents: "none"
+                }}
+                animate={{ rotate: 360 }}
+                transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
+              />
 
-              {/* Explainer card for active receive step */}
-              <div style={{ maxWidth: 640, margin: "24px auto 0", background: "white", border: "1.5px solid #B4EDCC", borderRadius: 16, padding: "20px 24px", display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
-                <div style={{ flex: 1.2, minWidth: 260 }}>
-                  <h4 style={{ fontSize: 15, fontWeight: 800, color: "#1A9F4A", marginBottom: 6, fontFamily: "var(--font-heading)" }}>
-                    {RECEIVE_STEP_EXPLANATIONS[activeReceiveStep].title}
-                  </h4>
-                  <p style={{ fontSize: 14, color: "#555", lineHeight: 1.6 }}>
-                    {RECEIVE_STEP_EXPLANATIONS[activeReceiveStep].details}
-                  </p>
+              <div style={{ position: "relative", zIndex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: "#888", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 24, textAlign: "center" }}>Receive Flow</div>
+                <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "center", flexWrap: "wrap", gap: 10 }}>
+                  {[
+                    { n:1, icon:Search, label:"Lookup", desc:"Session ID to record" },
+                    { n:2, icon:Send, label:"Sign", desc:"MetaMask identity proof" },
+                    { n:3, icon:Shield, label:"Verify", desc:"On-chain Merkle proof" },
+                    { n:4, icon:Key, label:"Reconstruct", desc:"ECDH to AES key" },
+                    { n:5, icon:Unlock, label:"Decrypt", desc:"AES-GCM + stego extract" },
+                    { n:6, icon:Receive, label:"Reveal", desc:"Hidden message appears" },
+                  ].map((s, i, arr) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center" }}>
+                      <PipeStep 
+                        {...s} 
+                        delay={i * 0.04 + 0.1} 
+                        isActive={activeReceiveStep === i} 
+                        onClick={() => setActiveReceiveStep(i)} 
+                      />
+                      {i < arr.length - 1 && (
+                        <div 
+                          style={{ 
+                            width: 24, height: 2, 
+                            background: activeReceiveStep > i ? "linear-gradient(to right,#1A9F4A,#B4EDCC)" : "#EBEBEB", 
+                            margin: "0 3px", flexShrink: 0, marginBottom: 36,
+                            transition: "background 0.3s ease" 
+                          }}
+                        />
+                      )}
+                    </div>
+                  ))}
                 </div>
-                <div style={{ flex: 0.8, minWidth: 160 }}>
-                  {RECEIVE_STEP_EXPLANATIONS[activeReceiveStep].graphic}
+
+                {/* Explainer card for active receive step */}
+                <div style={{ maxWidth: 640, margin: "24px auto 0", background: "white", border: "1.5px solid #B4EDCC", borderRadius: 16, padding: "20px 24px", display: "flex", gap: 20, flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ flex: 1.2, minWidth: 260 }}>
+                    <h4 style={{ fontSize: 15, fontWeight: 800, color: "#1A9F4A", marginBottom: 6, fontFamily: "var(--font-heading)" }}>
+                      {RECEIVE_STEP_EXPLANATIONS[activeReceiveStep].title}
+                    </h4>
+                    <p style={{ fontSize: 14, color: "#555", lineHeight: 1.6 }}>
+                      {RECEIVE_STEP_EXPLANATIONS[activeReceiveStep].details}
+                    </p>
+                  </div>
+                  <div style={{ flex: 0.8, minWidth: 160 }}>
+                    {RECEIVE_STEP_EXPLANATIONS[activeReceiveStep].graphic}
+                  </div>
                 </div>
               </div>
-            </div>
+            </motion.div>
 
           </div>
         </section>
@@ -746,16 +875,35 @@ export default function Home() {
         {/* ── CTA Banner ────────────────────────────────────── */}
         <section style={{ padding: "0 20px 88px" }}>
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}
-            style={{ maxWidth: 680, margin: "0 auto", background: "#111", borderRadius: 20, padding: "52px 40px", textAlign: "center", position: "relative", overflow: "hidden" }}
+            style={{ 
+              maxWidth: 680, margin: "0 auto", 
+              background: "linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 246, 238, 0.7) 100%)", 
+              borderRadius: 20, padding: "52px 40px", textAlign: "center", position: "relative", overflow: "hidden",
+              border: "1.5px solid rgba(232, 104, 12, 0.15)",
+              backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)",
+              boxShadow: "0 12px 40px rgba(232, 104, 12, 0.06)"
+            }}
           >
             <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg,#E8680C,#F09C00)" }} />
-            <div style={{ position: "absolute", top: -40, right: -40, width: 180, height: 180, borderRadius: "50%", background: "rgba(232,104,12,0.06)", filter: "blur(40px)", pointerEvents: "none" }}/>
+            <motion.div 
+              style={{ 
+                position: "absolute", 
+                top: -60, right: -60, 
+                width: 220, height: 220, 
+                borderRadius: "42%", 
+                background: "linear-gradient(135deg, rgba(232, 104, 12, 0.16) 0%, rgba(240, 156, 0, 0.02) 80%)", 
+                filter: "blur(24px)", 
+                pointerEvents: "none" 
+              }}
+              animate={{ rotate: 360 }}
+              transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
+            />
             <div style={{ position: "relative", zIndex: 1 }}>
               <div style={{ color: "#E8680C", display: "flex", justifyContent: "center", marginBottom: 20 }}>
                 <Shield size={40} />
               </div>
-              <h2 style={{ fontSize: 28, fontWeight: 800, color: "white", marginBottom: 12, letterSpacing: "-0.02em", fontFamily: "'Outfit', sans-serif" }}>Ready to send your first hidden message?</h2>
-              <p style={{ fontSize: 15, color: "#999", marginBottom: 28, lineHeight: 1.7 }}>Connect your MetaMask wallet and experience blockchain-verified steganographic communication.</p>
+              <h2 style={{ fontSize: 28, fontWeight: 800, color: "#111", marginBottom: 12, letterSpacing: "-0.02em", fontFamily: "'Outfit', sans-serif" }}>Ready to send your first hidden message?</h2>
+              <p style={{ fontSize: 15, color: "#666", marginBottom: 28, lineHeight: 1.7 }}>Connect your MetaMask wallet and experience blockchain-verified steganographic communication.</p>
               <div style={{ display: "flex", gap: 10, justifyContent: "center", flexWrap: "wrap" }}>
                 <Link href="/send" style={{ textDecoration: "none" }}>
                   <button className="btn-primary" style={{ padding: "13px 28px", fontSize: 15, borderRadius: 10 }}>
@@ -764,9 +912,14 @@ export default function Home() {
                 </Link>
                 <Link href="/register" style={{ textDecoration: "none" }}>
                   <button
-                    style={{ padding: "13px 28px", fontSize: 15, background: "rgba(255,255,255,0.06)", color: "white", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 10, cursor: "pointer", fontWeight: 600, transition: "all 0.15s", fontFamily: "'Inter', sans-serif" }}
-                    onMouseEnter={e => e.currentTarget.style.background = "rgba(255,255,255,0.1)"}
-                    onMouseLeave={e => e.currentTarget.style.background = "rgba(255,255,255,0.06)"}
+                    style={{ 
+                      padding: "13px 28px", fontSize: 15, 
+                      background: "rgba(232, 104, 12, 0.05)", color: "#E8680C", 
+                      border: "1px solid rgba(232, 104, 12, 0.15)", borderRadius: 10, 
+                      cursor: "pointer", fontWeight: 600, transition: "all 0.15s", fontFamily: "'Inter', sans-serif" 
+                    }}
+                    onMouseEnter={e => e.currentTarget.style.background = "rgba(232, 104, 12, 0.1)"}
+                    onMouseLeave={e => e.currentTarget.style.background = "rgba(232, 104, 12, 0.05)"}
                   >Create Account</button>
                 </Link>
               </div>
@@ -780,7 +933,6 @@ export default function Home() {
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <img src={logoImg.src} alt="StegoChain" style={{ height: 28, width: "auto" }} />
               <span style={{ fontFamily: "'Outfit', sans-serif", fontWeight: 800, fontSize: 15, color: "#111" }}>Stego<span style={{ color: "#E8680C" }}>Chain</span></span>
-              <span style={{ fontSize: 11, color: "#BBB", marginLeft: 6 }}>Blockchain + Steganography + AI</span>
             </div>
             <div style={{ display: "flex", gap: 16, alignItems: "center" }}>
               {CONTRACT && (
@@ -790,7 +942,7 @@ export default function Home() {
                 </a>
               )}
               <Link href="/ledger" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>Ledger</Link>
-              <Link href="/anomaly" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>Anomaly AI</Link>
+              <Link href="/anomaly" style={{ fontSize: 11, color: "#888", textDecoration: "none" }}>Anomaly</Link>
             </div>
           </div>
         </footer>
