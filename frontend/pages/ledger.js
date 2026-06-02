@@ -8,6 +8,7 @@ import HashDisplay from "../components/HashDisplay";
 import LoadingSkeleton from "../components/LoadingSkeleton";
 import { useAuth } from "../context/AuthContext";
 import { getMySent, getMyReceived, getBlockchainStats, verifyIntegrity, revokeRecord } from "../utils/api";
+import { List, Search, Refresh, Network, User, AlertTriangle, Cross } from "../components/Icons";
 
 export default function Ledger() {
   const router = useRouter();
@@ -83,16 +84,14 @@ export default function Ledger() {
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <div>
-              <h1 style={{ fontSize: 28, fontWeight: 800, color: "#1C1917", letterSpacing: "-0.02em", margin: 0 }}>Blockchain Ledger</h1>
-              <p style={{ fontSize: 14, color: "#78716C", margin: "4px 0 0" }}>All your on-chain steganographic records</p>
+              <h1 style={{ fontSize: 28, fontWeight: 800, color: "#111111", letterSpacing: "-0.02em", margin: 0 }}>Blockchain Ledger</h1>
+              <p style={{ fontSize: 14, color: "#888888", margin: "4px 0 0" }}>All your on-chain steganographic records</p>
             </div>
             <motion.button onClick={handleRefresh} className="btn-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}
-              style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <motion.svg animate={{ rotate: refreshing ? 360 : 0 }} transition={{ duration: 0.6, repeat: refreshing ? Infinity : 0, ease: "linear" }}
-                width="14" height="14" viewBox="0 0 14 14" fill="none">
-                <path d="M12 7A5 5 0 1 1 2 7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                <path d="M12 7V3.5M12 3.5H8.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-              </motion.svg>
+              style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+              <motion.div animate={{ rotate: refreshing ? 360 : 0 }} transition={{ duration: 0.6, repeat: refreshing ? Infinity : 0, ease: "linear" }} style={{ display: "inline-flex" }}>
+                <Refresh size={14} />
+              </motion.div>
               Refresh
             </motion.button>
           </div>
@@ -102,19 +101,19 @@ export default function Ledger() {
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap", marginBottom: 24 }}>
           <motion.div className="card card-hover" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
             style={{ padding: "18px 22px", flex: 1, minWidth: 150, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: -16, right: -16, fontSize: 48, opacity: 0.04 }}>⛓</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#F97316", letterSpacing: "-0.02em" }}>{stats?.total_records ?? "—"}</div>
-            <div style={{ fontSize: 12, color: "#78716C", marginTop: 3, fontWeight: 500 }}>Total Records</div>
+            <div style={{ position: "absolute", top: 8, right: 8, opacity: 0.06, color: "#E8680C" }}><Network size={40} /></div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#E8680C", letterSpacing: "-0.02em" }}>{stats?.total_records ?? "—"}</div>
+            <div style={{ fontSize: 12, color: "#888888", marginTop: 3, fontWeight: 500 }}>Total Records</div>
           </motion.div>
           <motion.div className="card card-hover" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
             style={{ padding: "18px 22px", flex: 1, minWidth: 150, position: "relative", overflow: "hidden" }}>
-            <div style={{ position: "absolute", top: -16, right: -16, fontSize: 48, opacity: 0.04 }}>👤</div>
-            <div style={{ fontSize: 26, fontWeight: 800, color: "#F97316", letterSpacing: "-0.02em" }}>{stats?.total_users ?? "—"}</div>
-            <div style={{ fontSize: 12, color: "#78716C", marginTop: 3, fontWeight: 500 }}>Registered Users</div>
+            <div style={{ position: "absolute", top: 8, right: 8, opacity: 0.06, color: "#E8680C" }}><User size={40} /></div>
+            <div style={{ fontSize: 26, fontWeight: 800, color: "#E8680C", letterSpacing: "-0.02em" }}>{stats?.total_users ?? "—"}</div>
+            <div style={{ fontSize: 12, color: "#888888", marginTop: 3, fontWeight: 500 }}>Registered Users</div>
           </motion.div>
           <motion.div className="card" initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
             style={{ padding: "18px 22px", flex: 2, minWidth: 240 }}>
-            <div style={{ fontSize: 11, color: "#78716C", marginBottom: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Contract Address</div>
+            <div style={{ fontSize: 11, color: "#888888", marginBottom: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em" }}>Contract Address</div>
             {CONTRACT && <HashDisplay value={CONTRACT} type="address"/>}
           </motion.div>
         </div>
@@ -122,14 +121,11 @@ export default function Ledger() {
         {/* Filter bar */}
         <div style={{ display: "flex", gap: 10, marginBottom: 20, flexWrap: "wrap" }}>
           <div style={{ position: "relative", flex: 1, minWidth: 220 }}>
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#A8A29E", pointerEvents: "none" }}>
-              <circle cx="6" cy="6" r="4" stroke="#A8A29E" strokeWidth="1.5"/>
-              <path d="M10 10l2 2" stroke="#A8A29E" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
+            <Search size={14} style={{ position: "absolute", left: 12, top: "50%", transform: "translateY(-50%)", color: "#BBBBBB", pointerEvents: "none" }} />
             <input className="input-field" placeholder="Search by record ID or session…" value={search}
               onChange={e => setSearch(e.target.value)} style={{ paddingLeft: 34 }}/>
           </div>
-          <div style={{ display: "flex", background: "#F8F7F5", borderRadius: 10, padding: 4, border: "1.5px solid #E7E5E4", gap: 2 }}>
+          <div style={{ display: "flex", background: "rgba(248, 247, 245, 0.65)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", borderRadius: 10, padding: 4, border: "1.5px solid rgba(231, 229, 228, 0.7)", gap: 2 }}>
             {[
               { id: "all",      label: `All (${sent.length + received.length})` },
               { id: "sent",     label: `Sent (${sent.length})` },
@@ -138,7 +134,7 @@ export default function Ledger() {
               <button key={f.id} onClick={() => setFilter(f.id)} style={{
                 padding: "7px 14px", borderRadius: 8, border: "none",
                 background: filter === f.id ? "white" : "transparent",
-                color: filter === f.id ? "#1C1917" : "#78716C",
+                color: filter === f.id ? "#111111" : "#888888",
                 fontWeight: filter === f.id ? 700 : 500, cursor: "pointer", fontSize: 13,
                 boxShadow: filter === f.id ? "0 1px 4px rgba(0,0,0,0.06)" : "none",
                 transition: "all 0.18s", fontFamily: "Inter, sans-serif",
@@ -155,9 +151,9 @@ export default function Ledger() {
         ) : filtered.length === 0 ? (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
             style={{ textAlign: "center", padding: "64px 0" }}>
-            <div style={{ fontSize: 52, marginBottom: 14 }}>📋</div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: "#1C1917", marginBottom: 6 }}>No records found</div>
-            <div style={{ fontSize: 14, color: "#78716C" }}>
+            <List size={48} style={{ color: "#888888", marginBottom: 14, margin: "0 auto" }} />
+            <div style={{ fontSize: 18, fontWeight: 700, color: "#111111", marginBottom: 6 }}>No records found</div>
+            <div style={{ fontSize: 14, color: "#888888" }}>
               {search ? `No results for "${search}"` : "Your blockchain records will appear here"}
             </div>
           </motion.div>
@@ -181,18 +177,18 @@ export default function Ledger() {
           >
             <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} transition={{ type: "spring", stiffness: 300, damping: 25 }}
               style={{ background: "white", borderRadius: 24, padding: 36, maxWidth: 440, width: "100%", boxShadow: "0 24px 80px rgba(0,0,0,0.15)", position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg,#DC2626,#EF4444)", borderRadius: "24px 24px 0 0" }} />
-              <div style={{ fontSize: 44, textAlign: "center", marginBottom: 16 }}>⚠️</div>
-              <h3 style={{ fontSize: 20, fontWeight: 800, color: "#1C1917", textAlign: "center", marginBottom: 12 }}>Revoke Record?</h3>
-              <p style={{ fontSize: 14, color: "#78716C", textAlign: "center", lineHeight: 1.7, marginBottom: 28 }}>
-                Are you sure you want to revoke record <strong style={{ color: "#1C1917" }}>#{revokeTarget.record_id || revokeTarget.id}</strong>?{" "}
+              <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: "linear-gradient(90deg,#E03131,#F03E3E)", borderRadius: "24px 24px 0 0" }} />
+              <div style={{ color: "#E03131", display: "flex", justifyContent: "center", marginBottom: 16 }}><AlertTriangle size={44} /></div>
+              <h3 style={{ fontSize: 20, fontWeight: 800, color: "#111111", textAlign: "center", marginBottom: 12 }}>Revoke Record?</h3>
+              <p style={{ fontSize: 14, color: "#888888", textAlign: "center", lineHeight: 1.7, marginBottom: 28 }}>
+                Are you sure you want to revoke record <strong style={{ color: "#111111" }}>#{revokeTarget.record_id || revokeTarget.id}</strong>?{" "}
                 This action is <strong>permanent</strong>. The receiver will no longer be able to decrypt this message.
               </p>
               <div style={{ display: "flex", gap: 10 }}>
                 <motion.button className="btn-secondary" style={{ flex: 1 }} whileHover={{ scale: 1.02 }} onClick={() => setRevokeTarget(null)}>Cancel</motion.button>
                 <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }} onClick={handleRevoke} disabled={revoking}
-                  style={{ flex: 1, background: "linear-gradient(135deg,#DC2626,#B91C1C)", color: "white", border: "none", borderRadius: 10, padding: "11px 20px", fontWeight: 700, cursor: "pointer", fontSize: 14, opacity: revoking ? 0.7 : 1, fontFamily: "Inter, sans-serif", display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
-                  {revoking ? <><div className="spinner spinner-sm" style={{ width: 14, height: 14, borderWidth: 2, borderTopColor: "white", borderColor: "rgba(255,255,255,0.3)" }}/> Revoking…</> : "🚫 Revoke"}
+                  style={{ flex: 1, background: "linear-gradient(135deg,#E03131,#C92A2A)", color: "white", border: "none", borderRadius: 10, padding: "11px 20px", fontWeight: 700, cursor: "pointer", fontSize: 14, opacity: revoking ? 0.7 : 1, fontFamily: "Inter, sans-serif", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+                  {revoking ? <><div className="spinner spinner-sm" style={{ width: 14, height: 14, borderWidth: 2, borderTopColor: "white", borderColor: "rgba(255,255,255,0.3)" }}/> Revoking…</> : <><Cross size={14} /> Revoke</>}
                 </motion.button>
               </div>
             </motion.div>

@@ -10,18 +10,19 @@ import SecurityBadge from "../components/SecurityBadge";
 import { useAuth } from "../context/AuthContext";
 import { useWallet } from "../context/WalletContext";
 import { getUserByEth, sendMessage, finalizeSend } from "../utils/api";
+import { Eye, Lock, Cloud, Key, Server, Network, Success, Send as SendIcon, Image, Audio, FileText, AlertTriangle, Wallet, User } from "../components/Icons";
 
 const STEPS = ["Upload File", "Compose", "Review", "Sending"];
 
 const PIPELINE = [
-  { label: "Steganography Embedding", icon: "👁", sub: "Hiding message in media" },
-  { label: "AES-256-GCM Encryption",  icon: "🔒", sub: "Encrypting stego file" },
-  { label: "IPFS Upload",             icon: "📡", sub: "Decentralised storage" },
-  { label: "Key Fragmentation",       icon: "🧩", sub: "Splitting AES key" },
-  { label: "Fragment Upload",         icon: "📡", sub: "ECC-encrypted fragments" },
-  { label: "Merkle Tree",             icon: "🌳", sub: "Building proof tree" },
-  { label: "Blockchain Registration", icon: "⛓", sub: "On-chain via MetaMask" },
-  { label: "Finalizing",              icon: "✅", sub: "Confirming record" },
+  { label: "Steganography Embedding", icon: Eye, sub: "Hiding message in media" },
+  { label: "AES-256-GCM Encryption",  icon: Lock, sub: "Encrypting stego file" },
+  { label: "IPFS Upload",             icon: Cloud, sub: "Decentralised storage" },
+  { label: "Key Fragmentation",       icon: Key, sub: "Splitting AES key" },
+  { label: "Fragment Upload",         icon: Cloud, sub: "ECC-encrypted fragments" },
+  { label: "Merkle Tree",             icon: Server, sub: "Building proof tree" },
+  { label: "Blockchain Registration", icon: Network, sub: "On-chain via MetaMask" },
+  { label: "Finalizing",              icon: Success, sub: "Confirming record" },
 ];
 
 const CONTRACT_ABI = [
@@ -54,12 +55,12 @@ function StepBar({ steps, current, completed }) {
             <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
               <div style={{
                 width: 32, height: 32, borderRadius: "50%", flexShrink: 0,
-                background: done ? "#16A34A" : active ? "#F97316" : "white",
-                border: `2px solid ${done ? "#16A34A" : active ? "#F97316" : "#E7E5E4"}`,
+                background: done ? "#1A9F4A" : active ? "#E8680C" : "white",
+                border: `2px solid ${done ? "#1A9F4A" : active ? "#E8680C" : "#EBEBEB"}`,
                 display: "flex", alignItems: "center", justifyContent: "center",
                 transition: "all 0.35s ease",
                 boxShadow: active ? "0 0 0 4px rgba(249,115,22,0.2)" : "none",
-                fontSize: 13, fontWeight: 700, color: done || active ? "white" : "#A8A29E",
+                fontSize: 13, fontWeight: 700, color: done || active ? "white" : "#BBBBBB",
               }}>
                 {done ? (
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 4" stroke="white" strokeWidth="2.2" strokeLinecap="round"/></svg>
@@ -67,12 +68,12 @@ function StepBar({ steps, current, completed }) {
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: "white", animation: "pulse-ring-orange 1.5s infinite" }} />
                 ) : i + 1}
               </div>
-              <div style={{ fontSize: 10, fontWeight: 600, color: active ? "#F97316" : done ? "#16A34A" : "#A8A29E", whiteSpace: "nowrap", letterSpacing: "0.02em" }}>
+              <div style={{ fontSize: 10, fontWeight: 600, color: active ? "#E8680C" : done ? "#1A9F4A" : "#BBBBBB", whiteSpace: "nowrap", letterSpacing: "0.02em" }}>
                 {s}
               </div>
             </div>
             {i < steps.length - 1 && (
-              <div style={{ flex: 1, height: 2, background: done ? "#16A34A" : "#E7E5E4", transition: "background 0.5s ease", margin: "0 6px", marginBottom: 20 }} />
+              <div style={{ flex: 1, height: 2, background: done ? "#1A9F4A" : "#EBEBEB", transition: "background 0.5s ease", margin: "0 6px", marginBottom: 20 }} />
             )}
           </div>
         );
@@ -102,8 +103,8 @@ function PipelineProgress({ steps }) {
                 {/* Background circle */}
                 <div style={{
                   width: 28, height: 28, borderRadius: "50%",
-                  background: isDone ? "#16A34A" : isLoading ? "white" : isError ? "#FEF2F2" : "#F0EDE9",
-                  border: `2px solid ${isDone ? "#16A34A" : isLoading ? "#FED7AA" : isError ? "#FCA5A5" : "#E7E5E4"}`,
+                  background: isDone ? "#1A9F4A" : isLoading ? "white" : isError ? "#FFF0F0" : "#F5F5F5",
+                  border: `2px solid ${isDone ? "#1A9F4A" : isLoading ? "#F9DCC4" : isError ? "#FFC4C4" : "#EBEBEB"}`,
                   display: "flex", alignItems: "center", justifyContent: "center",
                   transition: "all 0.35s ease",
                   position: "relative", zIndex: 1,
@@ -117,19 +118,19 @@ function PipelineProgress({ steps }) {
                     /* Spinning ring — orange arc rotating */
                     <div style={{
                       width: 22, height: 22, borderRadius: "50%",
-                      border: "2.5px solid #FED7AA",
-                      borderTopColor: "#F97316",
+                      border: "2.5px solid #F9DCC4",
+                      borderTopColor: "#E8680C",
                       animation: "spin 0.75s linear infinite",
                       position: "absolute",
                     }}/>
                   )}
                   {isError && (
                     <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <path d="M2 2l8 8M10 2L2 10" stroke="#DC2626" strokeWidth="2" strokeLinecap="round"/>
+                      <path d="M2 2l8 8M10 2L2 10" stroke="#E03131" strokeWidth="2" strokeLinecap="round"/>
                     </svg>
                   )}
                   {isPending && (
-                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#D1D5DB" }}/>
+                    <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#DDDDDD" }}/>
                   )}
                 </div>
               </div>
@@ -137,7 +138,7 @@ function PipelineProgress({ steps }) {
               {!isLast && (
                 <div style={{
                   width: 2, flex: 1, minHeight: 16,
-                  background: isDone ? "#16A34A" : "#E7E5E4",
+                  background: isDone ? "#1A9F4A" : "#EBEBEB",
                   transition: "background 0.5s ease",
                   margin: "3px 0",
                 }}/>
@@ -151,7 +152,7 @@ function PipelineProgress({ steps }) {
             }}>
               <div style={{
                 fontSize: 13, fontWeight: 700,
-                color: isDone ? "#16A34A" : isLoading ? "#F97316" : isError ? "#DC2626" : "#A8A29E",
+                color: isDone ? "#1A9F4A" : isLoading ? "#E8680C" : isError ? "#E03131" : "#BBBBBB",
                 transition: "color 0.3s ease",
                 lineHeight: 1.3,
               }}>
@@ -160,13 +161,13 @@ function PipelineProgress({ steps }) {
                   <span style={{
                     display: "inline-block", marginLeft: 6,
                     animation: "breathe 1.2s ease-in-out infinite",
-                    fontSize: 11, fontWeight: 500, color: "#F97316",
+                    fontSize: 11, fontWeight: 500, color: "#E8680C",
                   }}>
                     Processing…
                   </span>
                 )}
               </div>
-              <div style={{ fontSize: 11, color: "#A8A29E", marginTop: 1 }}>{s.sub}</div>
+              <div style={{ fontSize: 11, color: "#BBBBBB", marginTop: 1 }}>{s.sub}</div>
             </div>
 
           </div>
@@ -246,7 +247,7 @@ export default function Send() {
       clearInterval(interval);
       setPipeline(prev => prev.map((p, j) => ({ ...p, status: j < 6 ? "complete" : j === 6 ? "loading" : "pending" })));
 
-      toast("MetaMask: Confirm on-chain record registration", { icon: "🦊" });
+      toast("MetaMask: Confirm on-chain record registration.");
       const contractAddress = res.contract_address || process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
       const contract = new ethers.Contract(contractAddress, CONTRACT_ABI, signer);
 
@@ -287,10 +288,12 @@ export default function Send() {
         {/* Header */}
         <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} style={{ marginBottom: 28 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 6 }}>
-            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg,#FFF0E6,#FFE4CC)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 22, border: "1.5px solid #FED7AA" }}>📤</div>
+            <div style={{ width: 44, height: 44, borderRadius: 14, background: "linear-gradient(135deg,#FFF4EB,#FFE8D6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#E8680C", border: "1.5px solid #F9DCC4" }}>
+              <SendIcon size={22} />
+            </div>
             <div>
-              <h1 style={{ fontSize: 26, fontWeight: 800, color: "#1C1917", letterSpacing: "-0.02em", margin: 0 }}>Send a Message</h1>
-              <p style={{ fontSize: 14, color: "#78716C", margin: 0 }}>Hide your encrypted message inside a media file and anchor it on the blockchain</p>
+              <h1 style={{ fontSize: 26, fontWeight: 800, color: "#111111", letterSpacing: "-0.02em", margin: 0 }}>Send a Message</h1>
+              <p style={{ fontSize: 14, color: "#888888", margin: 0 }}>Hide your encrypted message inside a media file and anchor it on the blockchain</p>
             </div>
           </div>
         </motion.div>
@@ -303,8 +306,8 @@ export default function Send() {
           {step === 0 && (
             <motion.div key="s0" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
               <div className="card" style={{ padding: 28 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#1C1917", marginBottom: 4 }}>Upload Cover File</div>
-                <div style={{ fontSize: 13, color: "#78716C", marginBottom: 20 }}>This file will carry your hidden message — it won't be modified visually</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#111111", marginBottom: 4 }}>Upload Cover File</div>
+                <div style={{ fontSize: 13, color: "#888888", marginBottom: 20 }}>This file will carry your hidden message — it won't be modified visually</div>
 
                 <DropZone
                   onFileSelected={setFile}
@@ -318,15 +321,15 @@ export default function Send() {
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
                       style={{ marginTop: 16, position: "relative" }}
                     >
-                      <img src={preview} alt="preview" style={{ maxHeight: 220, borderRadius: 12, border: "1.5px solid #E7E5E4", display: "block", width: "100%", objectFit: "cover" }} />
+                      <img src={preview} alt="preview" style={{ maxHeight: 220, borderRadius: 12, border: "1.5px solid #EBEBEB", display: "block", width: "100%", objectFit: "cover" }} />
                       <div style={{ position: "absolute", top: 8, right: 8, background: "rgba(0,0,0,0.6)", color: "white", fontSize: 11, fontWeight: 600, padding: "4px 10px", borderRadius: 20, backdropFilter: "blur(4px)" }}>
                         {file.name} · {(file.size/1024).toFixed(1)} KB
                       </div>
                     </motion.div>
                   )}
                   {preview && isAudio && (
-                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 16, padding: 16, background: "#FFF0E6", borderRadius: 12, border: "1.5px solid #FED7AA" }}>
-                      <div style={{ fontSize: 13, fontWeight: 600, color: "#F97316", marginBottom: 10 }}>🎵 {file.name}</div>
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: 16, padding: 16, background: "#FFF4EB", borderRadius: 12, border: "1.5px solid #F9DCC4" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 13, fontWeight: 600, color: "#E8680C", marginBottom: 10 }}><Audio size={14} /> {file.name}</div>
                       <audio controls src={preview} style={{ width: "100%" }} />
                     </motion.div>
                   )}
@@ -345,17 +348,20 @@ export default function Send() {
                 style={{ marginTop: 12, display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}
               >
                 {[
-                  { fmt: "PNG", icon: "🖼", cap: "~500 chars", note: "Lossless • Best" },
-                  { fmt: "BMP", icon: "🖼", cap: "~500 chars", note: "Lossless" },
-                  { fmt: "WAV", icon: "🎵", cap: "~200 chars", note: "Echo hiding" },
-                ].map(f => (
-                  <div key={f.fmt} style={{ padding: "10px 12px", background: "white", border: "1.5px solid #E7E5E4", borderRadius: 10, textAlign: "center" }}>
-                    <div style={{ fontSize: 18 }}>{f.icon}</div>
-                    <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1917" }}>{f.fmt}</div>
-                    <div style={{ fontSize: 10, color: "#78716C" }}>{f.cap}</div>
-                    <div style={{ fontSize: 10, color: "#A8A29E" }}>{f.note}</div>
-                  </div>
-                ))}
+                  { fmt: "PNG", icon: Image, cap: "~500 chars", note: "Lossless • Best" },
+                  { fmt: "BMP", icon: Image, cap: "~500 chars", note: "Lossless" },
+                  { fmt: "WAV", icon: Audio, cap: "~200 chars", note: "Echo hiding" },
+                ].map(f => {
+                  const Icon = f.icon;
+                  return (
+                    <div key={f.fmt} style={{ padding: "10px 12px", background: "white", border: "1.5px solid #EBEBEB", borderRadius: 10, textAlign: "center", display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
+                      <Icon size={20} style={{ color: "#E8680C" }} />
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#111111" }}>{f.fmt}</div>
+                      <div style={{ fontSize: 10, color: "#888888" }}>{f.cap}</div>
+                      <div style={{ fontSize: 10, color: "#BBBBBB" }}>{f.note}</div>
+                    </div>
+                  );
+                })}
               </motion.div>
             </motion.div>
           )}
@@ -364,14 +370,14 @@ export default function Send() {
           {step === 1 && (
             <motion.div key="s1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
               <div className="card" style={{ padding: 28 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#1C1917", marginBottom: 4 }}>Compose Message</div>
-                <div style={{ fontSize: 13, color: "#78716C", marginBottom: 20 }}>Your message will be encrypted before being hidden</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#111111", marginBottom: 4 }}>Compose Message</div>
+                <div style={{ fontSize: 13, color: "#888888", marginBottom: 20 }}>Your message will be encrypted before being hidden</div>
 
                 {/* Secret message */}
                 <div style={{ marginBottom: 20 }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 7 }}>
                     <label className="label" style={{ margin: 0 }}>Secret Message</label>
-                    <span style={{ fontSize: 12, color: message.length > MAX_CHARS ? "#DC2626" : message.length > MAX_CHARS * 0.8 ? "#D97706" : "#78716C", fontWeight: 600 }}>
+                    <span style={{ fontSize: 12, color: message.length > MAX_CHARS ? "#E03131" : message.length > MAX_CHARS * 0.8 ? "#CF8100" : "#888888", fontWeight: 600 }}>
                       {message.length} / {MAX_CHARS}
                     </span>
                   </div>
@@ -384,15 +390,15 @@ export default function Send() {
                     style={{ resize: "vertical", minHeight: 120 }}
                   />
                   {/* Char progress */}
-                  <div style={{ marginTop: 6, height: 3, background: "#F0EDE9", borderRadius: 3, overflow: "hidden" }}>
+                  <div style={{ marginTop: 6, height: 3, background: "#F5F5F5", borderRadius: 3, overflow: "hidden" }}>
                     <div style={{
                       height: "100%", borderRadius: 3,
-                      background: message.length > MAX_CHARS ? "#DC2626" : message.length > MAX_CHARS * 0.8 ? "#D97706" : "#16A34A",
+                      background: message.length > MAX_CHARS ? "#E03131" : message.length > MAX_CHARS * 0.8 ? "#CF8100" : "#1A9F4A",
                       width: `${Math.min((message.length / MAX_CHARS) * 100, 100)}%`,
                       transition: "all 0.2s ease",
                     }} />
                   </div>
-                  {message.length > MAX_CHARS && <div style={{ fontSize: 11, color: "#DC2626", marginTop: 4 }}>⚠️ Exceeds cover file capacity</div>}
+                  {message.length > MAX_CHARS && <div style={{ display: "flex", alignItems: "center", gap: 4, fontSize: 11, color: "#E03131", marginTop: 4 }}><AlertTriangle size={12} /> Exceeds cover file capacity</div>}
                 </div>
 
                 {/* Receiver */}
@@ -407,13 +413,13 @@ export default function Send() {
                   <AnimatePresence>
                     {receiverInfo && (
                       <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-                        style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: receiverInfo.found ? "#F0FDF4" : "#FEF2F2", border: `1px solid ${receiverInfo.found ? "#BBF7D0" : "#FCA5A5"}` }}
+                        style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 8, padding: "8px 12px", borderRadius: 8, background: receiverInfo.found ? "#EDFCF2" : "#FFF0F0", border: `1px solid ${receiverInfo.found ? "#B4EDCC" : "#FFC4C4"}` }}
                       >
                         {receiverInfo.found ? (
-                          <><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 4" stroke="#16A34A" strokeWidth="2" strokeLinecap="round"/></svg>
-                          <span style={{ fontSize: 13, fontWeight: 600, color: "#16A34A" }}>@{receiverInfo.username} — Registered on-chain ✓</span></>
+                          <><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 7l3.5 3.5L12 4" stroke="#1A9F4A" strokeWidth="2" strokeLinecap="round"/></svg>
+                          <span style={{ fontSize: 13, fontWeight: 600, color: "#1A9F4A" }}>@{receiverInfo.username} — Registered on-chain ✓</span></>
                         ) : (
-                          <><span style={{ fontSize: 14 }}>❌</span><span style={{ fontSize: 13, fontWeight: 600, color: "#DC2626" }}>Address not registered on StegoChain</span></>
+                          <><AlertTriangle size={14} style={{ color: "#E03131" }} /><span style={{ fontSize: 13, fontWeight: 600, color: "#E03131" }}>Address not registered on StegoChain</span></>
                         )}
                       </motion.div>
                     )}
@@ -422,16 +428,16 @@ export default function Send() {
 
                 {/* Key fragments */}
                 <div style={{ marginBottom: 24 }}>
-                  <label className="label">Key Fragments <span style={{ fontSize: 11, color: "#A8A29E", fontWeight: 400 }}>— More fragments = higher security, slightly slower</span></label>
+                  <label className="label">Key Fragments <span style={{ fontSize: 11, color: "#BBBBBB", fontWeight: 400 }}>— More fragments = higher security, slightly slower</span></label>
                   <div style={{ display: "flex", gap: 8 }}>
                     {[4, 6, 8].map(n => (
                       <motion.button key={n} onClick={() => setFragments(n)}
                         whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
                         style={{
                           flex: 1, padding: "10px 0", borderRadius: 10, border: "1.5px solid",
-                          borderColor: fragments === n ? "#F97316" : "#E7E5E4",
-                          background: fragments === n ? "#FFF0E6" : "white",
-                          color: fragments === n ? "#F97316" : "#78716C",
+                          borderColor: fragments === n ? "#E8680C" : "#EBEBEB",
+                          background: fragments === n ? "#FFF4EB" : "white",
+                          color: fragments === n ? "#E8680C" : "#888888",
                           fontWeight: fragments === n ? 700 : 500, cursor: "pointer", fontSize: 15,
                           transition: "all 0.18s",
                           fontFamily: "Inter, sans-serif",
@@ -463,35 +469,35 @@ export default function Send() {
           {step === 2 && (
             <motion.div key="s2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.3 }}>
               <div className="card" style={{ padding: 28 }}>
-                <div style={{ fontSize: 15, fontWeight: 700, color: "#1C1917", marginBottom: 4 }}>Review &amp; Confirm</div>
-                <div style={{ fontSize: 13, color: "#78716C", marginBottom: 20 }}>Check everything before sending — this is permanent on the blockchain</div>
+                <div style={{ fontSize: 15, fontWeight: 700, color: "#111111", marginBottom: 4 }}>Review &amp; Confirm</div>
+                <div style={{ fontSize: 13, color: "#888888", marginBottom: 20 }}>Check everything before sending — this is permanent on the blockchain</div>
 
                 {/* Preview thumbnail */}
                 {preview && isImage && (
-                  <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", marginBottom: 20, maxHeight: 160, background: "#1C1917" }}>
+                  <div style={{ position: "relative", borderRadius: 12, overflow: "hidden", marginBottom: 20, maxHeight: 160, background: "#111111" }}>
                     <img src={preview} alt="" style={{ width: "100%", height: 160, objectFit: "cover", opacity: 0.6 }} />
                     <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                      <div style={{ background: "rgba(249,115,22,0.9)", color: "white", fontSize: 13, fontWeight: 700, padding: "6px 16px", borderRadius: 20, backdropFilter: "blur(4px)" }}>
-                        🔒 Message will be hidden here
+                      <div style={{ background: "rgba(249,115,22,0.9)", color: "white", fontSize: 13, fontWeight: 700, padding: "6px 16px", borderRadius: 20, backdropFilter: "blur(4px)", display: "flex", alignItems: "center", gap: 6 }}>
+                        <Lock size={14} /> Message will be hidden here
                       </div>
                     </div>
                   </div>
                 )}
 
                 {/* Summary table */}
-                <div style={{ background: "#F8F7F5", borderRadius: 12, padding: "4px 0", marginBottom: 20 }}>
+                <div style={{ background: "#FAFAFA", borderRadius: 12, padding: "4px 0", marginBottom: 20 }}>
                   {[
-                    { key: "Cover File",       val: `${file?.name} (${(file?.size/1024).toFixed(1)} KB)`, icon: "📁" },
-                    { key: "File Type",        val: isImage ? "Image (LSB steganography)" : "Audio (Echo hiding)", icon: "🖼" },
-                    { key: "Message Length",   val: `${message.length} characters`, icon: "✍️" },
-                    { key: "Receiver",         val: `@${receiverInfo?.username}`, icon: "👤" },
-                    { key: "Key Fragments",    val: `${fragments} fragments (ECC-encrypted)`, icon: "🧩" },
-                    { key: "Blockchain",       val: "Ethereum Sepolia (live)", icon: "⛓" },
-                  ].map(({ key, val, icon }, i, arr) => (
-                    <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 16px", borderBottom: i < arr.length - 1 ? "1px solid #E7E5E4" : "none" }}>
-                      <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
-                      <span style={{ fontSize: 13, color: "#78716C", minWidth: 110, flexShrink: 0 }}>{key}</span>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: "#1C1917" }}>{val}</span>
+                    { key: "Cover File",       val: `${file?.name} (${(file?.size/1024).toFixed(1)} KB)`, icon: FileText },
+                    { key: "File Type",        val: isImage ? "Image (LSB steganography)" : "Audio (Echo hiding)", icon: isImage ? Image : Audio },
+                    { key: "Message Length",   val: `${message.length} characters`, icon: SendIcon },
+                    { key: "Receiver",         val: `@${receiverInfo?.username}`, icon: User },
+                    { key: "Key Fragments",    val: `${fragments} fragments (ECC-encrypted)`, icon: Key },
+                    { key: "Blockchain",       val: "Ethereum Sepolia (live)", icon: Network },
+                  ].map(({ key, val, icon: Icon }, i, arr) => (
+                    <div key={key} style={{ display: "flex", alignItems: "center", gap: 10, padding: "11px 16px", borderBottom: i < arr.length - 1 ? "1px solid #EBEBEB" : "none" }}>
+                      <Icon size={14} style={{ color: "#E8680C", flexShrink: 0 }} />
+                      <span style={{ fontSize: 13, color: "#888888", minWidth: 110, flexShrink: 0 }}>{key}</span>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: "#111111" }}>{val}</span>
                     </div>
                   ))}
                 </div>
@@ -503,12 +509,12 @@ export default function Send() {
                 <div style={{ display: "flex", gap: 10 }}>
                   <motion.button className="btn-secondary" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setStep(1)}>← Back</motion.button>
                   {!isConnected ? (
-                    <motion.button className="btn-primary" style={{ flex: 1, padding: "12px 20px" }} whileHover={{ scale: 1.01 }} onClick={connect}>🦊 Connect Wallet</motion.button>
+                    <motion.button className="btn-primary" style={{ flex: 1, padding: "12px 20px", display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }} whileHover={{ scale: 1.01 }} onClick={connect}><Wallet size={16} /> Connect Wallet</motion.button>
                   ) : !isCorrectChain ? (
-                    <motion.button className="btn-primary" style={{ flex: 1, padding: "12px 20px" }} whileHover={{ scale: 1.01 }} onClick={switchToSepolia}>🦊 Switch to Sepolia</motion.button>
+                    <motion.button className="btn-primary" style={{ flex: 1, padding: "12px 20px", display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }} whileHover={{ scale: 1.01 }} onClick={switchToSepolia}><AlertTriangle size={16} /> Switch to Sepolia</motion.button>
                   ) : (
-                    <motion.button className="btn-primary" style={{ flex: 1, padding: "12px 20px", fontSize: 15 }} whileHover={{ scale: 1.02, boxShadow: "0 8px 24px rgba(249,115,22,0.3)" }} whileTap={{ scale: 0.98 }} onClick={handleSend}>
-                      🚀 Send Now
+                    <motion.button className="btn-primary" style={{ flex: 1, padding: "12px 20px", fontSize: 15, display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }} whileHover={{ scale: 1.02, boxShadow: "0 8px 24px rgba(249,115,22,0.3)" }} whileTap={{ scale: 0.98 }} onClick={handleSend}>
+                      <SendIcon size={16} /> Send Now
                     </motion.button>
                   )}
                 </div>
@@ -524,36 +530,36 @@ export default function Send() {
                 {/* Processing */}
                 {!result && !sendError && (
                   <>
-                    <div style={{ textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: "1px solid #F0EDE9" }}>
+                    <div style={{ textAlign: "center", marginBottom: 24, paddingBottom: 20, borderBottom: "1px solid #F5F5F5" }}>
                       {/* Animated spinner ring */}
                       <div style={{ position: "relative", width: 52, height: 52, margin: "0 auto 14px" }}>
                         <div style={{
                           width: 52, height: 52, borderRadius: "50%",
-                          border: "3px solid #FED7AA",
-                          borderTopColor: "#F97316",
+                          border: "3px solid #F9DCC4",
+                          borderTopColor: "#E8680C",
                           animation: "spin 0.9s linear infinite",
                         }}/>
                         <div style={{
                           position: "absolute", inset: 8, borderRadius: "50%",
-                          background: "linear-gradient(135deg,#FFF0E6,#FFE4CC)",
+                          background: "linear-gradient(135deg,#FFF4EB,#FFE8D6)",
                           display: "flex", alignItems: "center", justifyContent: "center",
-                          fontSize: 18,
+                          color: "#E8680C"
                         }}>
-                          🔐
+                          <Lock size={18} />
                         </div>
                       </div>
-                      <div style={{ fontSize: 15, fontWeight: 700, color: "#1C1917" }}>
+                      <div style={{ fontSize: 15, fontWeight: 700, color: "#111111" }}>
                         Processing your message
                         <span style={{ display: "inline-flex", gap: 2, marginLeft: 1, verticalAlign: "middle" }}>
                           {[0, 0.25, 0.5].map((d, i) => (
                             <span key={i} style={{
                               display: "inline-block", width: 4, height: 4, borderRadius: "50%",
-                              background: "#F97316", animation: `breathe 1.2s ease-in-out ${d}s infinite`,
+                              background: "#E8680C", animation: `breathe 1.2s ease-in-out ${d}s infinite`,
                             }}/>
                           ))}
                         </span>
                       </div>
-                      <div style={{ fontSize: 12, color: "#A8A29E", marginTop: 5 }}>Usually takes 15–30 seconds — stay on this page</div>
+                      <div style={{ fontSize: 12, color: "#BBBBBB", marginTop: 5 }}>Usually takes 15–30 seconds — stay on this page</div>
                     </div>
                     <PipelineProgress steps={pipeline} />
                   </>
@@ -563,9 +569,11 @@ export default function Send() {
                 {/* Error */}
                 {sendError && !result && (
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} style={{ textAlign: "center", padding: "20px 0" }}>
-                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }} style={{ fontSize: 48, marginBottom: 12 }}>❌</motion.div>
-                    <div style={{ fontSize: 16, fontWeight: 700, color: "#DC2626", marginBottom: 8 }}>Send Failed</div>
-                    <div style={{ fontSize: 13, color: "#78716C", marginBottom: 24, lineHeight: 1.7, maxWidth: 380, margin: "0 auto 24px" }}>{sendError}</div>
+                    <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 200 }} style={{ color: "#E03131", display: "flex", justifyContent: "center", marginBottom: 12 }}>
+                      <AlertTriangle size={48} />
+                    </motion.div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: "#E03131", marginBottom: 8 }}>Send Failed</div>
+                    <div style={{ fontSize: 13, color: "#888888", marginBottom: 24, lineHeight: 1.7, maxWidth: 380, margin: "0 auto 24px" }}>{sendError}</div>
                     <motion.button className="btn-primary" whileHover={{ scale: 1.02 }} style={{ padding: "11px 28px" }}
                       onClick={() => { setStep(2); setPipeline(PIPELINE.map(p => ({ ...p, status: "pending" }))); setSendError(null); }}
                     >Retry</motion.button>
@@ -577,18 +585,20 @@ export default function Send() {
                   <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.4 }}>
                     <div style={{ textAlign: "center", marginBottom: 24 }}>
                       <motion.div initial={{ scale: 0, rotate: -180 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: "spring", stiffness: 200, damping: 15 }}
-                        style={{ fontSize: 56, display: "block", marginBottom: 8 }}
-                      >✅</motion.div>
-                      <div style={{ fontSize: 20, fontWeight: 800, color: "#1C1917", letterSpacing: "-0.01em" }}>Message Sent!</div>
-                      <div style={{ fontSize: 14, color: "#78716C", marginTop: 4 }}>Blockchain record created on Ethereum Sepolia</div>
+                        style={{ color: "#1A9F4A", display: "block", marginBottom: 8 }}
+                      >
+                        <Success size={56} style={{ margin: "0 auto" }} />
+                      </motion.div>
+                      <div style={{ fontSize: 20, fontWeight: 800, color: "#111111", letterSpacing: "-0.01em" }}>Message Sent!</div>
+                      <div style={{ fontSize: 14, color: "#888888", marginTop: 4 }}>Blockchain record created on Ethereum Sepolia</div>
                     </div>
 
                     {/* Session ID — highlighted */}
                     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                      style={{ padding: 20, background: "linear-gradient(135deg,#FFF0E6,#FFF7EE)", border: "1.5px solid #FED7AA", borderRadius: 14, marginBottom: 16, position: "relative", overflow: "hidden" }}
+                      style={{ padding: 20, background: "linear-gradient(135deg,#FFF4EB,#FFF7EE)", border: "1.5px solid #F9DCC4", borderRadius: 14, marginBottom: 16, position: "relative", overflow: "hidden" }}
                     >
-                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg,#F97316,#F59E0B,#F97316)", backgroundSize: "200% 100%", animation: "gradientShift 2s ease infinite" }} />
-                      <div style={{ fontSize: 11, fontWeight: 700, color: "#F97316", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}>📤 Share this Session ID with the receiver</div>
+                      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: "linear-gradient(90deg,#E8680C,#F09C00,#E8680C)", backgroundSize: "200% 100%", animation: "gradientShift 2s ease infinite" }} />
+                      <div style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 700, color: "#E8680C", letterSpacing: "0.06em", textTransform: "uppercase", marginBottom: 8 }}><Send size={12} /> Share this Session ID with the receiver</div>
                       <HashDisplay value={result.session_id} type="sessionid" showLink={false} />
                     </motion.div>
 
@@ -598,13 +608,13 @@ export default function Send() {
                     >
                       {result.ipfs_cid && (
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <span style={{ fontSize: 12, color: "#78716C", minWidth: 80 }}>IPFS CID</span>
+                          <span style={{ fontSize: 12, color: "#888888", minWidth: 80 }}>IPFS CID</span>
                           <HashDisplay value={result.ipfs_cid} type="cid" />
                         </div>
                       )}
                       {result.tx_hash && (
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <span style={{ fontSize: 12, color: "#78716C", minWidth: 80 }}>Tx Hash</span>
+                          <span style={{ fontSize: 12, color: "#888888", minWidth: 80 }}>Tx Hash</span>
                           <HashDisplay value={result.tx_hash} type="txhash" />
                         </div>
                       )}

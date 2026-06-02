@@ -64,7 +64,7 @@ export default function UploadMedia({ onFileSelected, accept = "*", label = "Upl
         onDrop={onDrop}
         className="rounded-lg p-8 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all"
         style={{
-          border:          `2px dashed ${dragging ? "#6366f1" : error ? "#ef4444" : "#1e1e2e"}`,
+          border:          `2px dashed ${dragging ? "#6366f1" : error ? "#F03E3E" : "#1e1e2e"}`,
           backgroundColor: dragging ? "rgba(99,102,241,0.06)" : "#13131a",
           minHeight:       "160px",
         }}
@@ -86,7 +86,7 @@ export default function UploadMedia({ onFileSelected, accept = "*", label = "Upl
       </div>
 
       {error && (
-        <p className="text-xs mt-2" style={{ color: "#ef4444" }}>{error}</p>
+        <p className="text-xs mt-2" style={{ color: "#F03E3E" }}>{error}</p>
       )}
 
       {/* Hidden file input */}

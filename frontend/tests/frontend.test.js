@@ -309,9 +309,9 @@ test("Test 16 - MediaDisplay revealed", () => {
 test("Test 17 - index.js hero", async () => {
   const { default: Home } = require("../pages/index");
   render(React.createElement(Home));
-  expect(screen.getByText(/Secure/i)).toBeTruthy();
+  expect(screen.getAllByText(/Secret/i).length).toBeGreaterThan(0);
   expect(screen.getAllByText(/Hidden/i).length).toBeGreaterThan(0);
-  expect(screen.getByText(/Communication/i)).toBeTruthy();
+  expect(screen.getAllByText(/Communication/i).length).toBeGreaterThan(0);
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

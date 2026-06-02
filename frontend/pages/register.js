@@ -9,6 +9,7 @@ import WalletButton from "../components/WalletButton";
 import { api } from "../utils/api";
 import StepIndicator from "../components/StepIndicator";
 import { registerUser } from "../utils/api";
+import { AlertTriangle, Wallet, Key, List, Refresh } from "../components/Icons";
 
 const STEPS = ["Connect Wallet", "Account Details", "ECC Key Pair"];
 
@@ -93,8 +94,7 @@ export default function Register() {
         "Registering on blockchain via MetaMask…",
       ]);
       toast(
-        "MetaMask will ask you to confirm the on-chain registration transaction.",
-        { icon: "🦊" },
+        "MetaMask will ask you to confirm the on-chain registration transaction."
       );
       try {
         const chainRes = await registerOnChain(
@@ -122,8 +122,7 @@ export default function Register() {
           `⚠ Chain reg skipped: ${chainErr.message.slice(0, 80)}`,
         ]);
         toast(
-          "On-chain registration skipped. You can retry from your dashboard.",
-          { icon: "⚠️" },
+          "On-chain registration skipped. You can retry from your dashboard."
         );
         setTimeout(() => router.push("/dashboard"), 2500);
       }
@@ -145,13 +144,13 @@ export default function Register() {
     padding: 36,
     background: "white",
     borderRadius: 20,
-    border: "1px solid #E7E5E4",
+    border: "1px solid #EBEBEB",
     boxShadow: "0 4px 24px rgba(0,0,0,0.06)",
   };
 
   return (
     <div
-      style={{ minHeight: "100vh", background: "#F8F7F5", padding: "0 16px" }}
+      style={{ minHeight: "100vh", background: "transparent", padding: "0 16px" }}
     >
       <div style={{ paddingTop: 40, textAlign: "center" }}>
         <Link
@@ -166,13 +165,13 @@ export default function Register() {
           <svg width="24" height="24" viewBox="0 0 28 28" fill="none">
             <path
               d="M14 2L4 7v7c0 6.2 4.3 12 10 13.4C20 26 24.4 20.2 24.4 14V7L14 2z"
-              stroke="#F97316"
+              stroke="#E8680C"
               strokeWidth="1.5"
-              fill="#FFF0E6"
+              fill="#FFF4EB"
             />
           </svg>
-          <span style={{ fontWeight: 700, fontSize: 18, color: "#1C1917" }}>
-            Stego<span style={{ color: "#F97316" }}>Chain</span>
+          <span style={{ fontWeight: 700, fontSize: 18, color: "#111111" }}>
+            Stego<span style={{ color: "#E8680C" }}>Chain</span>
           </span>
         </Link>
       </div>
@@ -186,13 +185,13 @@ export default function Register() {
           style={{
             fontSize: 22,
             fontWeight: 700,
-            color: "#1C1917",
+            color: "#111111",
             marginBottom: 4,
           }}
         >
           Create Account
         </h1>
-        <p style={{ fontSize: 14, color: "#78716C", marginBottom: 24 }}>
+        <p style={{ fontSize: 14, color: "#888888", marginBottom: 24 }}>
           Register to start sending secure steganographic messages
         </p>
 
@@ -205,7 +204,7 @@ export default function Register() {
         {/* Step 0 — Connect Wallet */}
         {step === 0 && (
           <div style={{ marginTop: 24 }}>
-            <p style={{ fontSize: 14, color: "#78716C", marginBottom: 20 }}>
+            <p style={{ fontSize: 14, color: "#888888", marginBottom: 20 }}>
               MetaMask is required to sign your identity on the blockchain. No
               gas fees needed to register.
             </p>
@@ -221,8 +220,8 @@ export default function Register() {
                 <div
                   style={{
                     padding: "12px 16px",
-                    background: "#FFF7ED",
-                    border: "1px solid #FED7AA",
+                    background: "#FFF8F3",
+                    border: "1px solid #F9DCC4",
                     borderRadius: 10,
                   }}
                 >
@@ -230,13 +229,16 @@ export default function Register() {
                     style={{
                       fontSize: 13,
                       fontWeight: 600,
-                      color: "#C2410C",
+                      color: "#B85A0C",
                       marginBottom: 4,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6
                     }}
                   >
-                    ⚠️ Wrong Network
+                    <AlertTriangle size={14} style={{ color: "#B85A0C" }} /> Wrong Network
                   </div>
-                  <div style={{ fontSize: 12, color: "#78716C" }}>
+                  <div style={{ fontSize: 12, color: "#888888" }}>
                     MetaMask is connected but on a different network.
                     <br />
                     Switch to <strong>Ethereum Sepolia</strong> (chain ID:
@@ -246,14 +248,14 @@ export default function Register() {
                 <button
                   onClick={switchToSepolia}
                   className="btn-primary"
-                  style={{ width: "100%", fontSize: 15 }}
+                  style={{ width: "100%", fontSize: 15, display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }}
                 >
-                  🔄 Switch to Ethereum Sepolia
+                  <Refresh size={14} /> Switch Network
                 </button>
                 <div
                   style={{
                     fontSize: 11,
-                    color: "#A8A29E",
+                    color: "#BBBBBB",
                     textAlign: "center",
                   }}
                 >
@@ -271,8 +273,8 @@ export default function Register() {
                 <div
                   style={{
                     padding: 14,
-                    background: "#F0FDF4",
-                    border: "1px solid #BBF7D0",
+                    background: "#EDFCF2",
+                    border: "1px solid #B4EDCC",
                     borderRadius: 10,
                   }}
                 >
@@ -280,7 +282,7 @@ export default function Register() {
                     style={{
                       fontSize: 13,
                       fontWeight: 600,
-                      color: "#16A34A",
+                      color: "#1A9F4A",
                       marginBottom: 4,
                     }}
                   >
@@ -288,7 +290,7 @@ export default function Register() {
                   </div>
                   <div
                     className="mono"
-                    style={{ fontSize: 12, color: "#1C1917" }}
+                    style={{ fontSize: 12, color: "#111111" }}
                   >
                     {address}
                   </div>
@@ -320,7 +322,7 @@ export default function Register() {
                 style={{
                   fontSize: 13,
                   fontWeight: 500,
-                  color: "#1C1917",
+                  color: "#111111",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -341,7 +343,7 @@ export default function Register() {
                 style={{
                   fontSize: 13,
                   fontWeight: 500,
-                  color: "#1C1917",
+                  color: "#111111",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -363,7 +365,7 @@ export default function Register() {
                 style={{
                   fontSize: 13,
                   fontWeight: 500,
-                  color: "#1C1917",
+                  color: "#111111",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -385,7 +387,7 @@ export default function Register() {
                 style={{
                   fontSize: 13,
                   fontWeight: 500,
-                  color: "#1C1917",
+                  color: "#111111",
                   display: "block",
                   marginBottom: 6,
                 }}
@@ -418,7 +420,7 @@ export default function Register() {
             {form.password &&
               form.confirm &&
               form.password !== form.confirm && (
-                <div style={{ fontSize: 12, color: "#DC2626" }}>
+                <div style={{ fontSize: 12, color: "#E03131" }}>
                   Passwords do not match
                 </div>
               )}
@@ -428,7 +430,7 @@ export default function Register() {
         {/* Step 2 — ECC Key Pair */}
         {step === 2 && (
           <div style={{ marginTop: 24 }}>
-            <p style={{ fontSize: 14, color: "#78716C", marginBottom: 16 }}>
+            <p style={{ fontSize: 14, color: "#888888", marginBottom: 16 }}>
               Generate your ECC key pair. The public key is stored on the
               blockchain. Keep your private key safe — it is only shown once.
             </p>
@@ -436,11 +438,11 @@ export default function Register() {
             {!keypair ? (
               <button
                 className="btn-primary"
-                style={{ width: "100%" }}
+                style={{ width: "100%", display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }}
                 onClick={generateKeypair}
                 disabled={generating}
               >
-                {generating ? "Generating…" : "🔑 Generate Key Pair"}
+                {generating ? "Generating…" : <><Key size={14} /> Generate Key Pair</>}
               </button>
             ) : (
               <div
@@ -449,8 +451,8 @@ export default function Register() {
                 <div
                   style={{
                     padding: 14,
-                    background: "#F0FDF4",
-                    border: "1px solid #BBF7D0",
+                    background: "#EDFCF2",
+                    border: "1px solid #B4EDCC",
                     borderRadius: 10,
                     fontSize: 13,
                   }}
@@ -458,13 +460,13 @@ export default function Register() {
                   <div
                     style={{
                       fontWeight: 500,
-                      color: "#16A34A",
+                      color: "#1A9F4A",
                       marginBottom: 6,
                     }}
                   >
                     ✓ Key pair generated
                   </div>
-                  <div style={{ color: "#78716C" }}>
+                  <div style={{ color: "#888888" }}>
                     Public Key X:{" "}
                     <span className="mono" style={{ fontSize: 11 }}>
                       {keypair.public_key_x?.slice(0, 20)}…
@@ -475,8 +477,8 @@ export default function Register() {
                 <div
                   style={{
                     padding: 14,
-                    background: "#FFF0E6",
-                    border: "2px solid #F97316",
+                    background: "#FFF4EB",
+                    border: "2px solid #E8680C",
                     borderRadius: 10,
                   }}
                 >
@@ -484,11 +486,14 @@ export default function Register() {
                     style={{
                       fontSize: 13,
                       fontWeight: 600,
-                      color: "#C2410C",
+                      color: "#B85A0C",
                       marginBottom: 8,
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 6
                     }}
                   >
-                    ⚠️ Your private key is only shown once. Save it securely.
+                    <AlertTriangle size={14} style={{ color: "#B85A0C" }} /> Your private key is only shown once. Save it securely.
                     Never share it.
                   </div>
                   <div
@@ -499,7 +504,7 @@ export default function Register() {
                       marginBottom: 6,
                     }}
                   >
-                    <span style={{ fontSize: 12, color: "#78716C" }}>
+                    <span style={{ fontSize: 12, color: "#888888" }}>
                       Private Key (PEM)
                     </span>
                     <button
@@ -508,7 +513,7 @@ export default function Register() {
                         background: "none",
                         border: "none",
                         fontSize: 12,
-                        color: "#F97316",
+                        color: "#E8680C",
                         cursor: "pointer",
                       }}
                     >
@@ -524,7 +529,7 @@ export default function Register() {
                         borderRadius: 6,
                         padding: 8,
                         overflow: "auto",
-                        color: "#1C1917",
+                        color: "#111111",
                         whiteSpace: "pre-wrap",
                         wordBreak: "break-all",
                         maxHeight: 140,
@@ -550,15 +555,18 @@ export default function Register() {
                     style={{
                       marginTop: 8,
                       fontSize: 12,
-                      color: "#F97316",
+                      color: "#E8680C",
                       background: "none",
-                      border: "1px solid #F97316",
+                      border: "1px solid #E8680C",
                       borderRadius: 6,
                       padding: "4px 12px",
                       cursor: "pointer",
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 4
                     }}
                   >
-                    📋 Copy Private Key
+                    <List size={12} /> Copy Private Key
                   </button>
                 </div>
 
@@ -576,16 +584,19 @@ export default function Register() {
                     onChange={(e) => setConfirmed(e.target.checked)}
                     style={{ marginTop: 2 }}
                   />
-                  <span style={{ fontSize: 13, color: "#1C1917" }}>
+                  <span style={{ fontSize: 13, color: "#111111" }}>
                     I have saved my private key securely and understand I cannot
                     recover it
                   </span>
                 </label>
 
                 {submitting && (
-                  <div style={{ fontSize: 13, color: "#78716C" }}>
+                  <div style={{ fontSize: 13, color: "#888888", display: "flex", flexDirection: "column", gap: 6 }}>
                     {submitStatus.filter(Boolean).map((s, i) => (
-                      <div key={i}>⏳ {s}</div>
+                      <div key={i} style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                        <Refresh size={12} className="animate-spin" />
+                        <span>{s}</span>
+                      </div>
                     ))}
                   </div>
                 )}
@@ -608,14 +619,14 @@ export default function Register() {
             marginTop: 24,
             textAlign: "center",
             fontSize: 13,
-            color: "#78716C",
+            color: "#888888",
           }}
         >
           Already have an account?{" "}
           <Link
             href="/login"
             style={{
-              color: "#F97316",
+              color: "#E8680C",
               textDecoration: "none",
               fontWeight: 500,
             }}

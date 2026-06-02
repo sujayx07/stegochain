@@ -15,10 +15,10 @@ export default function StepIndicator({ steps, currentStep, completedSteps = [] 
                 style={{
                   width: 36, height: 36, borderRadius: "50%",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  background: isCompleted ? "#F97316" : isCurrent ? "white" : "#F8F7F5",
-                  border: isCompleted ? "2px solid #F97316" : isCurrent ? "2px solid #F97316" : "2px solid #E7E5E4",
+                  background: isCompleted ? "#E8680C" : isCurrent ? "white" : "#FAFAFA",
+                  border: isCompleted ? "2px solid #E8680C" : isCurrent ? "2px solid #E8680C" : "2px solid #EBEBEB",
                   fontWeight: 600, fontSize: 14,
-                  color: isCompleted ? "white" : isCurrent ? "#F97316" : "#A8A29E",
+                  color: isCompleted ? "white" : isCurrent ? "#E8680C" : "#BBBBBB",
                   transition: "all 0.3s ease"
                 }}
               >
@@ -32,7 +32,7 @@ export default function StepIndicator({ steps, currentStep, completedSteps = [] 
               </motion.div>
               <span style={{
                 fontSize: 11, fontWeight: 500, whiteSpace: "nowrap",
-                color: isCompleted ? "#F97316" : isCurrent ? "#1C1917" : "#A8A29E"
+                color: isCompleted ? "#E8680C" : isCurrent ? "#111111" : "#BBBBBB"
               }}>
                 {step}
               </span>
@@ -40,7 +40,7 @@ export default function StepIndicator({ steps, currentStep, completedSteps = [] 
             {i < steps.length - 1 && (
               <div style={{
                 width: 60, height: 2, margin: "0 6px", marginBottom: 20,
-                background: completedSteps.includes(i) ? "#F97316" : "#E7E5E4",
+                background: completedSteps.includes(i) ? "#E8680C" : "#EBEBEB",
                 transition: "background 0.4s ease"
               }}/>
             )}

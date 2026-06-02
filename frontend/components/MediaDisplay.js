@@ -25,13 +25,13 @@ export default function MediaDisplay({ mediaBs64, mimeType, hiddenMessage, revea
       <motion.div
         animate={revealed ? { y: -8 } : { y: 0 }}
         transition={{ type: "spring", stiffness: 200, damping: 20 }}
-        style={{ borderRadius: 16, overflow: "hidden", border: "1px solid #E7E5E4" }}
+        style={{ borderRadius: 16, overflow: "hidden", border: "1px solid #EBEBEB" }}
       >
         {isImage && blobUrl && (
-          <img src={blobUrl} alt="Decrypted media" style={{ width: "100%", display: "block", maxHeight: 400, objectFit: "contain", background: "#F8F7F5" }}/>
+          <img src={blobUrl} alt="Decrypted media" style={{ width: "100%", display: "block", maxHeight: 400, objectFit: "contain", background: "#FAFAFA" }}/>
         )}
         {isAudio && blobUrl && (
-          <div style={{ padding: 24, background: "#FFF0E6" }}>
+          <div style={{ padding: 24, background: "#FFF4EB" }}>
             <audio controls src={blobUrl} style={{ width: "100%" }}/>
           </div>
         )}
@@ -58,8 +58,8 @@ export default function MediaDisplay({ mediaBs64, mimeType, hiddenMessage, revea
                 transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
               >
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                  <rect x="3" y="11" width="18" height="11" rx="2" fill="#F97316"/>
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#F97316" strokeWidth="2" strokeLinecap="round"/>
+                  <rect x="3" y="11" width="18" height="11" rx="2" fill="#E8680C"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#E8680C" strokeWidth="2" strokeLinecap="round"/>
                   <circle cx="12" cy="16" r="1.5" fill="white"/>
                 </svg>
               </motion.div>
@@ -77,20 +77,20 @@ export default function MediaDisplay({ mediaBs64, mimeType, hiddenMessage, revea
             animate={{ opacity: 1, y: 0 }}
             transition={{ type: "spring", stiffness: 300, damping: 25, delay: 0.3 }}
             style={{
-              marginTop: 16, background: "#FFF0E6",
-              border: "1px solid #FED7AA", borderRadius: 16, padding: 20
+              marginTop: 16, background: "#FFF4EB",
+              border: "1px solid #F9DCC4", borderRadius: 16, padding: 20
             }}
           >
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                <rect x="3" y="11" width="18" height="11" rx="2" stroke="#F97316" strokeWidth="2"/>
-                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#F97316" strokeWidth="2" strokeLinecap="round"/>
-                <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#F97316" strokeWidth="0.5" strokeDasharray="2"/>
+                <rect x="3" y="11" width="18" height="11" rx="2" stroke="#E8680C" strokeWidth="2"/>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" stroke="#E8680C" strokeWidth="2" strokeLinecap="round"/>
+                <path d="M8 11V7a4 4 0 0 1 8 0v4" stroke="#E8680C" strokeWidth="0.5" strokeDasharray="2"/>
               </svg>
-              <span style={{ fontSize: 13, fontWeight: 600, color: "#C2410C" }}>Decrypted Message</span>
-              <span style={{ fontSize: 11, background: "#16A34A", color: "white", padding: "2px 8px", borderRadius: 20, marginLeft: "auto" }}>✓ Blockchain Verified</span>
+              <span style={{ fontSize: 13, fontWeight: 600, color: "#B85A0C" }}>Decrypted Message</span>
+              <span style={{ fontSize: 11, background: "#1A9F4A", color: "white", padding: "2px 8px", borderRadius: 20, marginLeft: "auto" }}>✓ Blockchain Verified</span>
             </div>
-            <p className="mono" style={{ fontSize: 15, color: "#1C1917", lineHeight: 1.6, margin: 0, wordBreak: "break-word" }}>
+            <p className="mono" style={{ fontSize: 15, color: "#111111", lineHeight: 1.6, margin: 0, wordBreak: "break-word" }}>
               {hiddenMessage}
             </p>
           </motion.div>
