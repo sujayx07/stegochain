@@ -10,7 +10,6 @@ import { Home, Send, Receive, Grid, List, Cpu, Wallet, AlertTriangle, MetaMask }
 import logoImg from "../Images/1.png";
 
 const NAV_LINKS = [
-  { href: "/",         label: "Home",      icon: Home },
   { href: "/send",     label: "Send",      icon: Send },
   { href: "/receive",  label: "Receive",   icon: Receive },
   { href: "/dashboard",label: "Dashboard", icon: Grid },
@@ -33,6 +32,9 @@ export default function Navbar() {
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuth();
   const { address, connect, connecting, isConnected, isCorrectChain, switchToSepolia } = useWallet();
+  const filteredLinks = isAuthenticated
+    ? NAV_LINKS
+    : [];
   const [backendOnline, setBackendOnline] = useState(null);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -76,7 +78,7 @@ export default function Navbar() {
 
           {/* Desktop Nav */}
           <div style={{ display: "flex", alignItems: "center", gap: 3, flex: 1, marginLeft: 32 }} className="hidden-mobile">
-            {NAV_LINKS.map(link => (
+            {filteredLinks.map(link => (
               <Link key={link.href} href={link.href} style={{ textDecoration: "none" }}>
                 <div style={{
                   padding: "8px 16px", borderRadius: 10, fontSize: 15,
@@ -133,10 +135,53 @@ export default function Navbar() {
 
 
             {isAuthenticated ? (
-              <button onClick={logout} className="btn-secondary" style={{ padding: "6px 12px", fontSize: 13 }}>Logout</button>
+              <button 
+                onClick={logout} 
+                style={{
+                  padding: "8px 18px", fontSize: 14, borderRadius: 10,
+                  background: "transparent",
+                  color: "#555",
+                  border: "1.5px solid #DDD",
+                  fontWeight: 600,
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  fontFamily: "'Inter', sans-serif"
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = "#FAFAFA";
+                  e.currentTarget.style.borderColor = "#BBB";
+                  e.currentTarget.style.color = "#111";
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = "transparent";
+                  e.currentTarget.style.borderColor = "#DDD";
+                  e.currentTarget.style.color = "#555";
+                }}
+              >
+                Logout
+              </button>
             ) : (
               <Link href="/login" style={{ textDecoration: "none" }}>
-                <button className="btn-secondary" style={{ padding: "6px 12px", fontSize: 13 }}>Login</button>
+                <button 
+                  style={{
+                    padding: "8px 18px", fontSize: 14, borderRadius: 10,
+                    background: "transparent",
+                    color: "#E8680C",
+                    border: "1.5px solid #E8680C",
+                    fontWeight: 600,
+                    cursor: "pointer",
+                    transition: "all 0.2s ease",
+                    fontFamily: "'Inter', sans-serif"
+                  }}
+                  onMouseEnter={e => {
+                    e.currentTarget.style.background = "#FFF4EB";
+                  }}
+                  onMouseLeave={e => {
+                    e.currentTarget.style.background = "transparent";
+                  }}
+                >
+                  Login
+                </button>
               </Link>
             )}
 
@@ -164,7 +209,7 @@ export default function Navbar() {
               style={{ borderTop: "1px solid #EBEBEB", background: "white", overflow: "hidden" }}
             >
               <div style={{ padding: "10px 14px 16px", display: "flex", flexDirection: "column", gap: 2 }}>
-                {NAV_LINKS.map(link => (
+                {filteredLinks.map(link => (
                   <Link key={link.href} href={link.href} style={{ textDecoration: "none" }}>
                     <div style={{
                       padding: "10px 14px", borderRadius: 8, fontSize: 14,

@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import Navbar from "../components/Navbar";
+import { useAuth } from "../context/AuthContext";
 import { getBlockchainStats, getGraphSummary } from "../utils/api";
 import { Send, Receive, Lock, Unlock, Eye, Key, Network, Cloud, Cpu, Shield, Search } from "../components/Icons";
 import dynamic from "next/dynamic";
@@ -474,6 +475,7 @@ const RECEIVE_STEP_EXPLANATIONS = [
 ];
 
 export default function Home() {
+  const { isAuthenticated } = useAuth();
   const [stats, setStats] = useState(null);
   const [graph, setGraph] = useState(null);
   const CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS;
@@ -910,18 +912,33 @@ export default function Home() {
                     <Send size={15} /> Send a Message
                   </button>
                 </Link>
-                <Link href="/register" style={{ textDecoration: "none" }}>
-                  <button
-                    style={{ 
-                      padding: "13px 28px", fontSize: 15, 
-                      background: "rgba(232, 104, 12, 0.05)", color: "#E8680C", 
-                      border: "1px solid rgba(232, 104, 12, 0.15)", borderRadius: 10, 
-                      cursor: "pointer", fontWeight: 600, transition: "all 0.15s", fontFamily: "'Inter', sans-serif" 
-                    }}
-                    onMouseEnter={e => e.currentTarget.style.background = "rgba(232, 104, 12, 0.1)"}
-                    onMouseLeave={e => e.currentTarget.style.background = "rgba(232, 104, 12, 0.05)"}
-                  >Create Account</button>
-                </Link>
+                {!isAuthenticated ? (
+                  <Link href="/register" style={{ textDecoration: "none" }}>
+                    <button
+                      style={{ 
+                        padding: "13px 28px", fontSize: 15, 
+                        background: "rgba(232, 104, 12, 0.05)", color: "#E8680C", 
+                        border: "1px solid rgba(232, 104, 12, 0.15)", borderRadius: 10, 
+                        cursor: "pointer", fontWeight: 600, transition: "all 0.15s", fontFamily: "'Inter', sans-serif" 
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(232, 104, 12, 0.1)"}
+                      onMouseLeave={e => e.currentTarget.style.background = "rgba(232, 104, 12, 0.05)"}
+                    >Create Account</button>
+                  </Link>
+                ) : (
+                  <Link href="/dashboard" style={{ textDecoration: "none" }}>
+                    <button
+                      style={{ 
+                        padding: "13px 28px", fontSize: 15, 
+                        background: "rgba(232, 104, 12, 0.05)", color: "#E8680C", 
+                        border: "1px solid rgba(232, 104, 12, 0.15)", borderRadius: 10, 
+                        cursor: "pointer", fontWeight: 600, transition: "all 0.15s", fontFamily: "'Inter', sans-serif" 
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.background = "rgba(232, 104, 12, 0.1)"}
+                      onMouseLeave={e => e.currentTarget.style.background = "rgba(232, 104, 12, 0.05)"}
+                    >Go to Dashboard</button>
+                  </Link>
+                )}
               </div>
             </div>
           </motion.div>

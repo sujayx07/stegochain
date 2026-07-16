@@ -1,4 +1,6 @@
 import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import { useAuth } from "../context/AuthContext";
 import { motion, AnimatePresence } from "framer-motion";
 import toast from "react-hot-toast";
 import Navbar from "../components/Navbar";
@@ -27,6 +29,8 @@ function ScoreBar({ score }) {
 }
 
 export default function Anomaly() {
+  const router = useRouter();
+  const { isAuthenticated, loading } = useAuth();
   const [summary, setSummary] = useState(null);
   const [epochs, setEpochs] = useState(100);
   const [running, setRunning] = useState(false);
@@ -40,8 +44,16 @@ export default function Anomaly() {
   const [flagging, setFlagging] = useState(false);
 
   useEffect(() => {
-    getGraphSummary().then(setSummary).catch(() => {});
-  }, []);
+    if (!loading && !isAuthenticated) router.push("/login");
+  }, [loading, isAuthenticated]);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      getGraphSummary().then(setSummary).catch(() => {});
+    }
+  }, [isAuthenticated]);
+
+  if (loading || !isAuthenticated) return null;
 
   useEffect(() => {
     if (!running) return;
