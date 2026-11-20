@@ -50,9 +50,20 @@ def create_app():
 
     # ── MongoDB ─────────────────────────────────────────────────────────────
     mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/stegochain")
-    client    = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000, connectTimeoutMS=5000)
-    db        = client.get_database()
-    app.db    = db
+    try:
+        client = MongoClient(
+            mongo_uri,
+            serverSelectionTimeoutMS=5000,
+            connectTimeoutMS=5000,
+        )
+        # Lazy — don't actually connect until first use; just validate the URI
+        db        = client.get_database()
+        app.db    = db
+        logging.info(f"MongoDB client initialised → {mongo_uri[:40]}…")
+    except Exception as exc:
+        logging.warning(f"MongoDB init warning (will retry on first request): {exc}")
+        # Still set app.db so blueprints don't crash on import
+        app.db = None
     
     # Store client for teardown
     @app.teardown_appcontext
